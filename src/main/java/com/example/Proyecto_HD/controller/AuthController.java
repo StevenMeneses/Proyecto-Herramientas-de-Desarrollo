@@ -3,9 +3,17 @@ package com.example.Proyecto_HD.controller;
 import com.example.Proyecto_HD.model.Usuario;
 import com.example.Proyecto_HD.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional; // ← IMPORT AGREGADO
 
 @Controller
 public class AuthController {
@@ -19,7 +27,7 @@ public class AuthController {
         return "redirect:/login";
     }
 
-    // Muestra la página de login
+    // Muestra la página de login (THYMELEAF - NO React)
     @GetMapping("/login")
     public String showLoginPage(@RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "success", required = false) String success,
@@ -30,10 +38,10 @@ public class AuthController {
         if (success != null) {
             model.addAttribute("success", success);
         }
-        return "login";
+        return "login"; // Devuelve la plantilla Thymeleaf
     }
 
-    // Muestra la página de registro
+    // Muestra la página de registro (THYMELEAF - NO React)
     @GetMapping("/registro")
     public String showRegisterPage(@RequestParam(value = "error", required = false) String error,
                                   @RequestParam(value = "success", required = false) String success,
@@ -44,10 +52,10 @@ public class AuthController {
         if (success != null) {
             model.addAttribute("success", success);
         }
-        return "registro";
+        return "registro"; // Devuelve la plantilla Thymeleaf
     }
 
-    // Procesa el registro de cliente
+    // Procesa el registro de cliente (FORMULARIO THYMELEAF)
     @PostMapping("/registro/cliente")
     public String registerCliente(@RequestParam String nombre,
                                  @RequestParam String apellido,
@@ -96,7 +104,7 @@ public class AuthController {
         }
     }
 
-    // Procesa el registro de vendedor
+    // Procesa el registro de vendedor (FORMULARIO THYMELEAF)
     @PostMapping("/registro/vendedor")
     public String registerVendedor(@RequestParam String nombre,
                                   @RequestParam String apellido,
@@ -142,6 +150,85 @@ public class AuthController {
         } catch (Exception e) {
             model.addAttribute("error", "Error en el registro: " + e.getMessage());
             return "registro";
+        }
+    }
+
+    // Procesa el login (FORMULARIO THYMELEAF)
+    @PostMapping("/login")
+    public String processLogin(@RequestParam String email,
+                              @RequestParam String contrasena,
+                              @RequestParam(required = false) String userType,
+                              HttpSession session,
+                              Model model,
+                              HttpServletResponse response) {
+    System.out.println("Tipo de usuario: " + userType);
+        
+        try {
+            // Aquí va tu lógica de autenticación
+            Usuario usuario = usuarioService.autenticarUsuario(email, contrasena)
+                 .orElse(null);
+            
+            if (usuario != null) {
+                // Guardar usuario en sesión
+                session.setAttribute("usuario", usuario);
+                return "redirect:/dashboard?login=success";
+            } else {
+                model.addAttribute("error", "Credenciales incorrectas");
+                return "login";
+            }
+        } catch (RuntimeException e) {
+          // Captura el mensaje específico del servicio
+          model.addAttribute("error", e.getMessage());
+          return "login";
+            
+        }catch (Exception e) {
+            model.addAttribute("error", "Error en el login: " + e.getMessage());
+            return "login";
+
+        }
+    }
+
+    // Endpoint para cerrar sesión
+    @GetMapping("/logout")
+    public String logout(HttpSession session, HttpServletResponse response) {
+        // Invalidar la sesión
+        session.invalidate();
+        
+        // Limpiar cookies (opcional pero recomendado)
+        Cookie cookie = new Cookie("JSESSIONID", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        
+        return "redirect:/login?logout=success";
+    }
+
+    // APIs JSON para React (OPCIONAL - si las necesitas)
+    @PostMapping("/api/login")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> apiLogin(@RequestBody Map<String, String> loginData,
+                                                       HttpSession session) {
+        Map<String, String> response = new HashMap<>();
+        
+        try {
+            // CORRECCIÓN: Agregar .orElse(null) ↓
+            Usuario usuario = usuarioService.autenticarUsuario(
+                loginData.get("email"), 
+                loginData.get("contrasena")
+            ).orElse(null); // ← ESTO FALTABA
+            
+            if (usuario != null) {
+                session.setAttribute("usuario", usuario);
+                response.put("success", "Login exitoso");
+                response.put("redirect", "http://localhost:3000");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("error", "Credenciales incorrectas");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            response.put("error", "Error en el login: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }

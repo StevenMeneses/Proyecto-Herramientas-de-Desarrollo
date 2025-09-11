@@ -3,7 +3,6 @@ package com.example.Proyecto_HD.service;
 import com.example.Proyecto_HD.model.Usuario;
 import com.example.Proyecto_HD.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,8 +13,6 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-    
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public Usuario registrarUsuario(Usuario usuario) {
         // Verificar si el email ya existe
@@ -28,8 +25,8 @@ public class UsuarioService {
             throw new RuntimeException("El DNI ya está registrado");
         }
         
-        // Encriptar la contraseña
-        usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
+        // ⚠️ NO encriptar la contraseña - guardar en texto plano
+        // usuario.setContrasena(usuario.getContrasena()); // Ya está en texto plano
         
         // Guardar el usuario en la BD
         return usuarioRepository.save(usuario);
@@ -40,13 +37,17 @@ public class UsuarioService {
         
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-            // Verificar si la contraseña coincide
-            if (passwordEncoder.matches(password, usuario.getContrasena())) {
+            // ⚠️ Comparar directamente sin encriptación
+            if (usuario.getContrasena().equals(password)) {
                 return Optional.of(usuario);
+            } else {
+                // Lanzar excepción con mensaje específico de contraseña incorrecta
+                throw new RuntimeException("Contraseña incorrecta");
             }
         }
         
-        return Optional.empty();
+        // Si el usuario no existe
+        throw new RuntimeException("Usuario no encontrado");
     }
 
     public List<Usuario> obtenerTodosUsuarios() {
@@ -59,5 +60,15 @@ public class UsuarioService {
 
     public void eliminarUsuario(Long id) {
         usuarioRepository.deleteById(id);
+    }
+
+    // Método adicional para actualizar contraseña si luego quieres encriptar
+    public void actualizarContrasena(Long idUsuario, String nuevaContrasena) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            usuario.setContrasena(nuevaContrasena); // o passwordEncoder.encode(nuevaContrasena) si encriptas
+            usuarioRepository.save(usuario);
+        }
     }
 }
