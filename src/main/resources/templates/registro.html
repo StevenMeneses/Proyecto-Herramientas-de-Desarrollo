@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marly Handmade - Registro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #8a6d3b;
+            --secondary-color: #f9f2e7;
+            --accent-color: #d4a76a;
+            --text-color: #333;
+            --light-color: #fff;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --client-color: #4a89dc;
+            --seller-color: #3b8a6d;
+            --admin-color: #8a6d3b;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), 
+                              url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 50L0 25L50 0L100 25L50 50ZM50 50L0 75L50 100L100 75L50 50Z' fill='%23d4a76a' fill-opacity='0.1'/%3E%3C/svg%3E");
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            min-height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .welcome-panel {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .welcome-panel h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .welcome-panel p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .roles-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .roles-info h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .role-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .role-badge {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .admin-badge {
+            background-color: var(--admin-color);
+        }
+        
+        .seller-badge {
+            background-color: var(--seller-color);
+        }
+        
+        .client-badge {
+            background-color: var(--client-color);
+        }
+        
+        .register-options {
+            flex: 1.2;
+            background-color: var(--light-color);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .option-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .option-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .option-tab.active {
+            color: var(--primary-color);
+        }
+        
+        .option-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+        
+        .option-tab:nth-child(1).active::after {
+            background-color: var(--client-color);
+        }
+        
+        .option-tab:nth-child(2).active::after {
+            background-color: var(--seller-color);
+        }
+        
+        .register-form-container {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .register-form {
+            display: none;
+        }
+        
+        .register-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .client-form .input-with-icon i {
+            color: var(--client-color);
+        }
+        
+        .seller-form .input-with-icon i {
+            color: var(--seller-color);
+        }
+        
+        .input-with-icon input, .input-with-icon select {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .input-with-icon input:focus, .input-with-icon select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212, 167, 106, 0.2);
+        }
+        
+        .client-form .input-with-icon input:focus {
+            border-color: var(--client-color);
+            box-shadow: 0 0 0 3px rgba(74, 137, 220, 0.2);
+        }
+        
+        .seller-form .input-with-icon input:focus {
+            border-color: var(--seller-color);
+            box-shadow: 0 0 0 3px rgba(59, 138, 109, 0.2);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .client-btn {
+            background-color: var(--client-color);
+        }
+        
+        .seller-btn {
+            background-color: var(--seller-color);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            background-color: #ffe6e6;
+            color: var(--error-color);
+            border: 1px solid #ffcccc;
+        }
+        
+        .success-message {
+            background-color: #e6ffe6;
+            color: var(--success-color);
+            border: 1px solid #ccffcc;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                max-width: 450px;
+            }
+            
+            .welcome-panel {
+                padding: 30px 20px;
+            }
+            
+            .welcome-panel h1 {
+                font-size: 28px;
+            }
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-panel">
+            <h1>Marly Handmade</h1>
+            <p>Únete a nuestra comunidad. Regístrate según tu perfil para acceder a todos nuestros servicios y productos artesanales.</p>
+            
+            <div class="roles-info">
+                <h3>Tipos de Registro</h3>
+                <div class="role-item">
+                    <div class="role-badge client-badge"></div>
+                    <span>Cliente - Accede a nuestro catálogo y realiza compras</span>
+                </div>
+                <div class="role-item">
+                    <div class="role-badge seller-badge"></div>
+                    <span>Vendedor - Gestiona ventas y clientes (requiere validación)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="register-options">
+            <div class="option-tabs">
+                <div class="option-tab active" data-tab="client">Registro de Cliente</div>
+                <div class="option-tab" data-tab="seller">Registro de Vendedor</div>
+            </div>
+            
+            <div class="register-form-container">
+                <!-- Mensajes de éxito/error -->
+                <div th:if="${error}" class="message error-message">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <span th:text="${error}"></span>
+                </div>
+                
+                <div th:if="${success}" class="message success-message">
+                    <i class="fas fa-check-circle"></i> 
+                    <span th:text="${success}"></span>
+                </div>
+                
+                <!-- Formulario de Cliente -->
+                <form id="clientForm" class="register-form active client-form" th:action="@{/registro/cliente}" method="post">
+                    <h2>Registro de Cliente</h2>
+                    <p style="color: #777; margin-bottom: 20px;">Completa tus datos para crear una cuenta de cliente</p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientNombre">Nombre</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="clientNombre" name="nombre" required placeholder="Tu nombre">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clientApellido">Apellido</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="clientApellido" name="apellido" required placeholder="Tu apellido">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientDni">DNI</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" id="clientDni" name="dni" required placeholder="Número de DNI">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientEmail">Correo Electrónico</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="clientEmail" name="email" required placeholder="correo@ejemplo.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientCorreo">Confirmar Correo</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="clientCorreo" name="correo" required placeholder="confirma tu correo">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientTelefono">Teléfono</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="clientTelefono" name="telefono" placeholder="Tu teléfono">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientDireccion">Dirección</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-home"></i>
+                            <input type="text" id="clientDireccion" name="direccion" placeholder="Tu dirección">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientPassword">Contraseña</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="clientPassword" name="contrasena" required placeholder="Crea una contraseña">
+                                <span class="password-toggle" onclick="togglePassword('clientPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clientConfirmPassword">Confirmar Contraseña</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="clientConfirmPassword" name="confirmPassword" required placeholder="Repite tu contraseña">
+                                <span class="password-toggle" onclick="togglePassword('clientConfirmPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn client-btn">
+                        <i class="fas fa-user-plus"></i> Registrarse como Cliente
+                    </button>
+                </form>
+                
+                <!-- Formulario de Vendedor -->
+                <form id="sellerForm" class="register-form seller-form" th:action="@{/registro/vendedor}" method="post">
+                    <h2>Registro de Vendedor</h2>
+                    <p style="color: #777; margin-bottom: 20px;">Completa tus datos para solicitar una cuenta de vendedor</p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="sellerNombre">Nombre</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="sellerNombre" name="nombre" required placeholder="Tu nombre">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sellerApellido">Apellido</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="sellerApellido" name="apellido" required placeholder="Tu apellido">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sellerDni">DNI</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" id="sellerDni" name="dni" required placeholder="Número de DNI">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sellerEmail">Correo Electrónico</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="sellerEmail" name="email" required placeholder="correo@ejemplo.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sellerCorreo">Confirmar Correo</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="sellerCorreo" name="correo" required placeholder="confirma tu correo">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sellerTelefono">Teléfono</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="sellerTelefono" name="telefono" required placeholder="Tu teléfono">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sellerDireccion">Dirección</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-home"></i>
+                            <input type="text" id="sellerDireccion" name="direccion" required placeholder="Tu dirección">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="sellerPassword">Contraseña</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="sellerPassword" name="contrasena" required placeholder="Crea una contraseña">
+                                <span class="password-toggle" onclick="togglePassword('sellerPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sellerConfirmPassword">Confirmar Contraseña</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="sellerConfirmPassword" name="confirmPassword" required placeholder="Repite tu contraseña">
+                                <span class="password-toggle" onclick="togglePassword('sellerConfirmPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn seller-btn">
+                        <i class="fas fa-user-tie"></i> Solicitar Cuenta de Vendedor
+                    </button>
+                </form>
+                
+                <div class="login-link">
+                    ¿Ya tienes una cuenta? <a th:href="@{/login}">Inicia sesión aquí</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cambiar entre pestañas
+        document.querySelectorAll('.option-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Actualizar pestañas activas
+                document.querySelectorAll('.option-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Mostrar formulario correspondiente
+                const tabId = this.getAttribute('data-tab');
+                document.querySelectorAll('.register-form').forEach(form => form.classList.remove('active'));
+                document.getElementById(tabId + 'Form').classList.add('active');
+            });
+        });
+        
+        // Alternar visibilidad de contraseña
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const eyeIcon = passwordInput.nextElementSibling.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Validación de correos coincidentes
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const email = this.querySelector('input[name="email"]').value;
+                const confirmEmail = this.querySelector('input[name="correo"]').value;
+                
+                if (email !== confirmEmail) {
+                    e.preventDefault();
+                    alert('Los correos electrónicos no coinciden. Por favor, verifica.');
+                    return false;
+                }
+                
+                const password = this.querySelector('input[name="contrasena"]').value;
+                const confirmPassword = this.querySelector('input[name="confirmPassword"]').value;
+                
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    alert('Las contraseñas no coinciden. Por favor, verifica.');
+                    return false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
