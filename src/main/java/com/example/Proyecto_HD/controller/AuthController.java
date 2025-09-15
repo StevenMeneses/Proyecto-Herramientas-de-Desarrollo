@@ -171,7 +171,7 @@ public class AuthController {
             if (usuario != null) {
                 // Guardar usuario en sesión
                 session.setAttribute("usuario", usuario);
-                return "redirect:/dashboard?login=success";
+                return "redirect:http://localhost:3000?login=success";
             } else {
                 model.addAttribute("error", "Credenciales incorrectas");
                 return "login";
