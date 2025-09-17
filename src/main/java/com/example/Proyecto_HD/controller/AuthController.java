@@ -156,52 +156,64 @@ public class AuthController {
     // Procesa el login (FORMULARIO THYMELEAF)
     @PostMapping("/login")
     public String processLogin(@RequestParam String email,
-                              @RequestParam String contrasena,
-                              @RequestParam(required = false) String userType,
-                              HttpSession session,
-                              Model model,
-                              HttpServletResponse response) {
-    System.out.println("Tipo de usuario: " + userType);
+                          @RequestParam String contrasena,
+                          HttpSession session,
+                          Model model,
+                          HttpServletResponse response) {
+    
+    try {
+        Optional<Usuario> usuarioOpt = usuarioService.autenticarUsuario(email, contrasena);
         
-        try {
-            // Aquí va tu lógica de autenticación
-            Usuario usuario = usuarioService.autenticarUsuario(email, contrasena)
-                 .orElse(null);
-            
-            if (usuario != null) {
-                // Guardar usuario en sesión
-                session.setAttribute("usuario", usuario);
-                return "redirect:/dashboard?login=success";
-            } else {
-                model.addAttribute("error", "Credenciales incorrectas");
-                return "login";
-            }
-        } catch (RuntimeException e) {
-          // Captura el mensaje específico del servicio
-          model.addAttribute("error", e.getMessage());
-          return "login";
-            
-        }catch (Exception e) {
-            model.addAttribute("error", "Error en el login: " + e.getMessage());
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+
+            System.out.println("Usuario autenticado: " + usuario.getEmail());
+            System.out.println("Rol: " + usuario.getIdRol());
+            System.out.println("ID: " + usuario.getIdUsuario());
+
+            // Guardar usuario en sesión
+            session.setAttribute("usuario", usuario);
+
+                        // Configurar cookie manualmente para cross-domain
+            Cookie sessionCookie = new Cookie("JSESSIONID", session.getId());
+            sessionCookie.setDomain("localhost");
+            sessionCookie.setPath("/");
+            sessionCookie.setMaxAge(3600);
+            sessionCookie.setHttpOnly(false);
+            sessionCookie.setSecure(false);
+            response.addCookie(sessionCookie);
+
+            System.out.println("Usuario guardado en sesión: " + session.getAttribute("usuario"));
+
+            return "redirect:http://localhost:3000?login=success";
+        } else {
+            model.addAttribute("error", "El correo o contraseña son incorrectos");
             return "login";
-
         }
+        
+    } catch (RuntimeException e) {
+        // ✅ Captura el mensaje específico del servicio
+        model.addAttribute("error", e.getMessage());
+        return "login";
+    } catch (Exception e) {
+        model.addAttribute("error", "Error en el login: " + e.getMessage());
+        return "login";
     }
-
+}
     // Endpoint para cerrar sesión
-    @GetMapping("/logout")
+    @RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
     public String logout(HttpSession session, HttpServletResponse response) {
-        // Invalidar la sesión
-        session.invalidate();
-        
-        // Limpiar cookies (opcional pero recomendado)
-        Cookie cookie = new Cookie("JSESSIONID", null);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-        
-        return "redirect:/login?logout=success";
-    }
+    // Invalidar la sesión
+    session.invalidate();
+    
+    // Limpiar cookies (opcional pero recomendado)
+    Cookie cookie = new Cookie("JSESSIONID", null);
+    cookie.setPath("/");
+    cookie.setMaxAge(0);
+    response.addCookie(cookie);
+    
+    return "redirect:/login?logout=success";
+}
 
     // APIs JSON para React (OPCIONAL - si las necesitas)
     @PostMapping("/api/login")
