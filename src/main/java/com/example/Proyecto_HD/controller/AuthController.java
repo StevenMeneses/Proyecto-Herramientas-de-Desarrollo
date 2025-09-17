@@ -156,12 +156,13 @@ public class AuthController {
     // Procesa el login (FORMULARIO THYMELEAF)
     @PostMapping("/login")
     public String processLogin(@RequestParam String email,
-                              @RequestParam String contrasena,
-                              @RequestParam(required = false) String userType,
-                              HttpSession session,
-                              Model model,
-                              HttpServletResponse response) {
-    System.out.println("Tipo de usuario: " + userType);
+                          @RequestParam String contrasena,
+                          HttpSession session,
+                          Model model,
+                          HttpServletResponse response) {
+    
+    try {
+        Optional<Usuario> usuarioOpt = usuarioService.autenticarUsuario(email, contrasena);
         
         try {
             // Aquí va tu lógica de autenticación
@@ -171,7 +172,7 @@ public class AuthController {
             if (usuario != null) {
                 // Guardar usuario en sesión
                 session.setAttribute("usuario", usuario);
-                return "redirect:http://localhost:3000?login=success";
+                return "redirect:/dashboard?login=success";
             } else {
                 model.addAttribute("error", "Credenciales incorrectas");
                 return "login";
@@ -189,19 +190,19 @@ public class AuthController {
     }
 
     // Endpoint para cerrar sesión
-    @GetMapping("/logout")
+    @RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
     public String logout(HttpSession session, HttpServletResponse response) {
-        // Invalidar la sesión
-        session.invalidate();
-        
-        // Limpiar cookies (opcional pero recomendado)
-        Cookie cookie = new Cookie("JSESSIONID", null);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-        
-        return "redirect:/login?logout=success";
-    }
+    // Invalidar la sesión
+    session.invalidate();
+    
+    // Limpiar cookies (opcional pero recomendado)
+    Cookie cookie = new Cookie("JSESSIONID", null);
+    cookie.setPath("/");
+    cookie.setMaxAge(0);
+    response.addCookie(cookie);
+    
+    return "redirect:/login?logout=success";
+}
 
     // APIs JSON para React (OPCIONAL - si las necesitas)
     @PostMapping("/api/login")

@@ -14,6 +14,11 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    // ✅ Método para buscar por email (FUERA de registrarUsuario)
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
     public Usuario registrarUsuario(Usuario usuario) {
         // Verificar si el email ya existe
         if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
