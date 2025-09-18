@@ -17,24 +17,32 @@ public class UserApiController {
 
     @GetMapping("/datos")
     public ResponseEntity<?> getDatosUsuario(HttpSession session) {
-    System.out.println("SESSION ID: " + session.getId()); // ← Debug
-    System.out.println("USUARIO EN SESION: " + session.getAttribute("usuario")); // ← Debug
+        System.out.println("=== SOLICITUD API /api/usuario/datos ===");
+        System.out.println("Session ID: " + session.getId());
+        
         Usuario usuario = (Usuario) session.getAttribute("usuario");
         
         if (usuario != null) {
-            // Crear un mapa con los datos del usuario (sin información sensible)
+            System.out.println("✅ Usuario en sesión: " + usuario.getEmail());
+            
             Map<String, Object> usuarioData = new HashMap<>();
-            usuarioData.put("id", usuario.getIdUsuario()); // CORREGIDO: getIdUsuario()
+            usuarioData.put("id", usuario.getIdUsuario());
             usuarioData.put("nombre", usuario.getNombre());
             usuarioData.put("apellido", usuario.getApellido());
             usuarioData.put("email", usuario.getEmail());
             usuarioData.put("idRol", usuario.getIdRol());
-            usuarioData.put("activo", usuario.getActivo()); // CORREGIDO: getActivo()
+            usuarioData.put("activo", usuario.getActivo());
             
             return ResponseEntity.ok(usuarioData);
         }
-        System.out.println("No hay usuario en sesión");
-        // Devolver un error 401 si no hay usuario en sesión
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
+        
+        System.out.println("❌ No hay usuario en sesión - Devolviendo 401");
+        
+        // Devuelve JSON en lugar de redirigir
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Usuario no autenticado");
+        errorResponse.put("status", "401");
+        
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 }
