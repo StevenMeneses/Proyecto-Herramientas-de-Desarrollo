@@ -9,27 +9,47 @@ const GestionVentas = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/usuario/datos', {
+        console.log('🔍 GestionVentas: Solicitando datos de usuario');
+        const response = await fetch('http://localhost:8080/api/usuario/datos', {
           credentials: 'include'
         });
+        
+        console.log('📨 GestionVentas - Status:', response.status);
+        
         if (response.ok) {
           const userData = await response.json();
+          console.log('✅ GestionVentas - Usuario:', userData);
           setUser(userData);
+        } else {
+          console.log('❌ GestionVentas - Error:', response.status);
         }
       } catch (error) {
-        console.error('Error obteniendo datos del usuario:', error);
+        console.error('💥 GestionVentas - Error:', error);
       }
     };
 
     fetchUserData();
   }, []);
 
-  if (!user || (user.idRol !== 1 && user.idRol !== 2)) {
+  // Mostrar loading mientras se cargan los datos
+  if (user === null) {
+    return (
+      <div className="products-page">
+        <div className="page-header">
+          <h1 className="page-title">Cargando...</h1>
+          <p className="page-subtitle">Verificando permisos de acceso</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.idRol !== 1 && user.idRol !== 2) {
     return (
       <div className="products-page">
         <div className="page-header">
           <h1 className="page-title">Acceso Denegado</h1>
           <p className="page-subtitle">No tienes permisos para acceder a esta sección</p>
+          <p>Tu rol actual: {user.idRol === 3 ? 'Cliente' : 'Desconocido'}</p>
         </div>
       </div>
     );
@@ -40,7 +60,7 @@ const GestionVentas = () => {
       <div className="page-header">
         <h1 className="page-title">Gestión de Ventas</h1>
         <p className="page-subtitle">
-          Panel de administración para {user.idRol === 1 ? 'Administradores' : 'Vendedores'}
+          Panel de administración para {user.idRol === 1 ? 'Administrador' : 'Vendedor'} - {user.nombre}
         </p>
       </div>
 

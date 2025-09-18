@@ -20,24 +20,39 @@ function App() {
   // Obtener datos del usuario al cargar el componente
   useEffect(() => {
     const fetchUsuario = async () => {
-      try {
-        const response = await fetch('/api/usuario/datos', {
-          credentials: 'include' // Importante para enviar cookies de sesión
-        });
-
-        console.log('Respuesta recibida:', response.status, response.statusText);
+  try {
+    console.log('🔍 Haciendo request a /api/usuario/datos');
+    
+    const response = await fetch('http://localhost:8080/api/usuario/datos', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
         
-        if (response.ok) {
-          const userData = await response.json();
-          setUsuario(userData);
-        } else if (response.status === 401) {
-          console.log('Usuario no autenticado');
-          setUsuario(null);
-        }
-      } catch (error) {
-        console.error('Error obteniendo datos del usuario:', error);
       }
-    };
+    });
+    
+    console.log('📨 Status:', response.status, response.statusText);
+    
+    // Leer como texto primero para debuggear
+    const responseText = await response.text();
+    console.log('📝 Response:', responseText);
+    
+    if (response.ok) {
+      try {
+        const userData = JSON.parse(responseText);
+        console.log('✅ JSON parseado:', userData);
+        setUsuario(userData);
+      } catch (jsonError) {
+        console.error('❌ Error parseando JSON:', jsonError);
+      }
+    } else {
+      console.log('❌ Error HTTP:', response.status);
+      setUsuario(null);
+    }
+  } catch (error) {
+    console.error('💥 Error de red:', error);
+  }
+};
     
     // Verificar si viene de un login exitoso
     const urlParams = new URLSearchParams(window.location.search);
