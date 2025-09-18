@@ -161,6 +161,7 @@ public class AuthController {
                           HttpServletResponse response,
                           Model model) {
     
+
         try {
             Optional<Usuario> usuarioOpt = usuarioService.autenticarUsuario(email, contrasena);
             
@@ -196,6 +197,7 @@ public class AuthController {
         } catch (Exception e) {
             model.addAttribute("error", "Error en el login: " + e.getMessage());
             return "login";
+
         }
     }
 
