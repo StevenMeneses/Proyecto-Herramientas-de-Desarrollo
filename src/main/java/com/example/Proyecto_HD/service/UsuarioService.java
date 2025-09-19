@@ -3,7 +3,11 @@ package com.example.Proyecto_HD.service;
 import com.example.Proyecto_HD.model.Usuario;
 import com.example.Proyecto_HD.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate; // ← Importar JdbcTemplate
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import jakarta.persistence.EntityManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +18,18 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate; // ← Inyectar JdbcTemplate
+
+     @Autowired
+    private EntityManager entityManager; 
+
     // ✅ Método para buscar por email (FUERA de registrarUsuario)
     public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
 
+    // MÉTODO ORIGINAL (para otras operaciones)
     public Usuario registrarUsuario(Usuario usuario) {
         // Verificar si el email ya existe
         if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
@@ -29,9 +40,6 @@ public class UsuarioService {
         if (usuarioRepository.findByDni(usuario.getDni()).isPresent()) {
             throw new RuntimeException("El DNI ya está registrado");
         }
-        
-        // ⚠️ NO encriptar la contraseña - guardar en texto plano
-        // usuario.setContrasena(usuario.getContrasena()); // Ya está en texto plano
         
         // Guardar el usuario en la BD
         return usuarioRepository.save(usuario);

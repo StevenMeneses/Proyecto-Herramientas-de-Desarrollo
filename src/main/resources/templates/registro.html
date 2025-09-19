@@ -322,6 +322,13 @@
             flex: 1;
             margin-bottom: 0;
         }
+        
+        .validation-message {
+            color: var(--error-color);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -363,6 +370,9 @@
                 
                 <!-- Formulario de Cliente -->
                 <form id="clientForm" class="register-form active client-form" th:action="@{/registro/cliente}" method="post">
+                    <!-- CAMBIO IMPORTANTE: id_rol en lugar de idRol -->
+                    <input type="hidden" name="id_rol" value="3">
+                    
                     <h2>Registro de Cliente</h2>
                     <p style="color: #777; margin-bottom: 20px;">Completa tus datos para crear una cuenta de cliente</p>
                     
@@ -388,7 +398,8 @@
                         <label for="clientDni">DNI</label>
                         <div class="input-with-icon">
                             <i class="fas fa-id-card"></i>
-                            <input type="text" id="clientDni" name="dni" required placeholder="Número de DNI">
+                            <input type="text" id="clientDni" name="dni" required placeholder="Número de DNI" maxlength="8">
+                            <div id="dniValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -397,6 +408,7 @@
                         <div class="input-with-icon">
                             <i class="fas fa-envelope"></i>
                             <input type="email" id="clientEmail" name="email" required placeholder="correo@ejemplo.com">
+                            <div id="emailValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -405,6 +417,7 @@
                         <div class="input-with-icon">
                             <i class="fas fa-envelope"></i>
                             <input type="email" id="clientCorreo" name="correo" required placeholder="confirma tu correo">
+                            <div id="confirmEmailValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -412,7 +425,8 @@
                         <label for="clientTelefono">Teléfono</label>
                         <div class="input-with-icon">
                             <i class="fas fa-phone"></i>
-                            <input type="tel" id="clientTelefono" name="telefono" placeholder="Tu teléfono">
+                            <input type="tel" id="clientTelefono" name="telefono" placeholder="Tu teléfono" maxlength="9">
+                            <div id="phoneValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -433,6 +447,7 @@
                                 <span class="password-toggle" onclick="togglePassword('clientPassword')">
                                     <i class="fas fa-eye"></i>
                                 </span>
+                                <div id="passwordValidation" class="validation-message"></div>
                             </div>
                         </div>
                         
@@ -444,6 +459,7 @@
                                 <span class="password-toggle" onclick="togglePassword('clientConfirmPassword')">
                                     <i class="fas fa-eye"></i>
                                 </span>
+                                <div id="confirmPasswordValidation" class="validation-message"></div>
                             </div>
                         </div>
                     </div>
@@ -455,6 +471,9 @@
                 
                 <!-- Formulario de Vendedor -->
                 <form id="sellerForm" class="register-form seller-form" th:action="@{/registro/vendedor}" method="post">
+                    <!-- CAMBIO IMPORTANTE: id_rol en lugar de idRol -->
+                    <input type="hidden" name="id_rol" value="2">
+                    
                     <h2>Registro de Vendedor</h2>
                     <p style="color: #777; margin-bottom: 20px;">Completa tus datos para solicitar una cuenta de vendedor</p>
                     
@@ -480,7 +499,8 @@
                         <label for="sellerDni">DNI</label>
                         <div class="input-with-icon">
                             <i class="fas fa-id-card"></i>
-                            <input type="text" id="sellerDni" name="dni" required placeholder="Número de DNI">
+                            <input type="text" id="sellerDni" name="dni" required placeholder="Número de DNI" maxlength="8">
+                            <div id="sellerDniValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -489,6 +509,7 @@
                         <div class="input-with-icon">
                             <i class="fas fa-envelope"></i>
                             <input type="email" id="sellerEmail" name="email" required placeholder="correo@ejemplo.com">
+                            <div id="sellerEmailValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -497,6 +518,7 @@
                         <div class="input-with-icon">
                             <i class="fas fa-envelope"></i>
                             <input type="email" id="sellerCorreo" name="correo" required placeholder="confirma tu correo">
+                            <div id="sellerConfirmEmailValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -504,7 +526,8 @@
                         <label for="sellerTelefono">Teléfono</label>
                         <div class="input-with-icon">
                             <i class="fas fa-phone"></i>
-                            <input type="tel" id="sellerTelefono" name="telefono" required placeholder="Tu teléfono">
+                            <input type="tel" id="sellerTelefono" name="telefono" required placeholder="Tu teléfono" maxlength="9">
+                            <div id="sellerPhoneValidation" class="validation-message"></div>
                         </div>
                     </div>
                     
@@ -525,6 +548,7 @@
                                 <span class="password-toggle" onclick="togglePassword('sellerPassword')">
                                     <i class="fas fa-eye"></i>
                                 </span>
+                                <div id="sellerPasswordValidation" class="validation-message"></div>
                             </div>
                         </div>
                         
@@ -536,6 +560,7 @@
                                 <span class="password-toggle" onclick="togglePassword('sellerConfirmPassword')">
                                     <i class="fas fa-eye"></i>
                                 </span>
+                                <div id="sellerConfirmPasswordValidation" class="validation-message"></div>
                             </div>
                         </div>
                     </div>
@@ -583,26 +608,212 @@
             }
         }
         
-        // Validación de correos coincidentes
+        // Validación en tiempo real de email y DNI
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validar email único
+            const emailInputs = document.querySelectorAll('input[name="email"]');
+            emailInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    const formType = this.closest('form').id.includes('client') ? 'client' : 'seller';
+                    checkFieldAvailability('email', this.value, 'Este correo ya está registrado', formType);
+                    validateEmail(this.value, formType);
+                });
+            });
+
+            // Validar DNI único
+            const dniInputs = document.querySelectorAll('input[name="dni"]');
+            dniInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    const formType = this.closest('form').id.includes('client') ? 'client' : 'seller';
+                    checkFieldAvailability('dni', this.value, 'Este DNI ya está registrado', formType);
+                    validateDni(this.value, formType);
+                });
+            });
+
+            // Validar confirmación de email
+            const confirmEmailInputs = document.querySelectorAll('input[name="correo"]');
+            confirmEmailInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    const formType = this.closest('form').id.includes('client') ? 'client' : 'seller';
+                    const email = this.closest('form').querySelector('input[name="email"]').value;
+                    validateEmailConfirmation(email, this.value, formType);
+                });
+            });
+
+            // Validar teléfono
+            const phoneInputs = document.querySelectorAll('input[name="telefono"]');
+            phoneInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    const formType = this.closest('form').id.includes('client') ? 'client' : 'seller';
+                    validatePhone(this.value, formType);
+                });
+            });
+
+            // Validar contraseña
+            const passwordInputs = document.querySelectorAll('input[name="contrasena"]');
+            passwordInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    const formType = this.closest('form').id.includes('client') ? 'client' : 'seller';
+                    validatePassword(this.value, formType);
+                });
+            });
+
+            // Validar confirmación de contraseña
+            const confirmPasswordInputs = document.querySelectorAll('input[name="confirmPassword"]');
+            confirmPasswordInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    const formType = this.closest('form').id.includes('client') ? 'client' : 'seller';
+                    const password = this.closest('form').querySelector('input[name="contrasena"]').value;
+                    validatePasswordConfirmation(password, this.value, formType);
+                });
+            });
+        });
+
+        function checkFieldAvailability(field, value, errorMessage, formType) {
+            if (!value) return;
+            
+            fetch(`/registro/check-${field}?${field}=${encodeURIComponent(value)}`)
+                .then(response => response.json())
+                .then(exists => {
+                    if (exists) {
+                        const validationElement = document.getElementById(`${formType}${field.charAt(0).toUpperCase() + field.slice(1)}Validation`);
+                        validationElement.textContent = errorMessage;
+                        validationElement.style.display = 'block';
+                    }
+                });
+        }
+
+        function validateEmail(email, formType) {
+            const validationElement = document.getElementById(`${formType}EmailValidation`);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                validationElement.textContent = 'Por favor, ingresa un correo electrónico válido.';
+                validationElement.style.display = 'block';
+            } else {
+                validationElement.style.display = 'none';
+            }
+        }
+
+        function validateEmailConfirmation(email, confirmEmail, formType) {
+            const validationElement = document.getElementById(`${formType}ConfirmEmailValidation`);
+            
+            if (email !== confirmEmail) {
+                validationElement.textContent = 'Los correos electrónicos no coinciden.';
+                validationElement.style.display = 'block';
+            } else {
+                validationElement.style.display = 'none';
+            }
+        }
+
+        function validateDni(dni, formType) {
+            const validationElement = document.getElementById(`${formType}DniValidation`);
+            const dniRegex = /^\d{8}$/;
+            
+            if (!dniRegex.test(dni)) {
+                validationElement.textContent = 'El DNI debe tener 8 dígitos numéricos.';
+                validationElement.style.display = 'block';
+            } else {
+                validationElement.style.display = 'none';
+            }
+        }
+
+        function validatePhone(phone, formType) {
+            const validationElement = document.getElementById(`${formType}PhoneValidation`);
+            const phoneRegex = /^\d{9}$/;
+            
+            if (phone && !phoneRegex.test(phone)) {
+                validationElement.textContent = 'El teléfono debe tener 9 dígitos numéricos.';
+                validationElement.style.display = 'block';
+            } else {
+                validationElement.style.display = 'none';
+            }
+        }
+
+        function validatePassword(password, formType) {
+            const validationElement = document.getElementById(`${formType}PasswordValidation`);
+            
+            if (password.length < 6) {
+                validationElement.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                validationElement.style.display = 'block';
+            } else {
+                validationElement.style.display = 'none';
+            }
+        }
+
+        function validatePasswordConfirmation(password, confirmPassword, formType) {
+            const validationElement = document.getElementById(`${formType}ConfirmPasswordValidation`);
+            
+            if (password !== confirmPassword) {
+                validationElement.textContent = 'Las contraseñas no coinciden.';
+                validationElement.style.display = 'block';
+            } else {
+                validationElement.style.display = 'none';
+            }
+        }
+
+        // Validación de formularios mejorada
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function(e) {
+                let isValid = true;
+                const formType = this.id.includes('client') ? 'client' : 'seller';
+                
+                // Validar correos coincidentes
                 const email = this.querySelector('input[name="email"]').value;
                 const confirmEmail = this.querySelector('input[name="correo"]').value;
                 
                 if (email !== confirmEmail) {
                     e.preventDefault();
                     alert('Los correos electrónicos no coinciden. Por favor, verifica.');
-                    return false;
+                    isValid = false;
                 }
-                
+
+                // Validar contraseñas coincidentes
                 const password = this.querySelector('input[name="contrasena"]').value;
                 const confirmPassword = this.querySelector('input[name="confirmPassword"]').value;
                 
                 if (password !== confirmPassword) {
                     e.preventDefault();
                     alert('Las contraseñas no coinciden. Por favor, verifica.');
-                    return false;
+                    isValid = false;
                 }
+
+                // Validar longitud mínima de contraseña
+                if (password.length < 6) {
+                    e.preventDefault();
+                    alert('La contraseña debe tener al menos 6 caracteres.');
+                    isValid = false;
+                }
+
+                // Validar formato de email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    e.preventDefault();
+                    alert('Por favor, ingresa un correo electrónico válido.');
+                    isValid = false;
+                }
+                
+                // Validar DNI
+                const dni = this.querySelector('input[name="dni"]').value;
+                const dniRegex = /^\d{8}$/;
+                if (!dniRegex.test(dni)) {
+                    e.preventDefault();
+                    alert('El DNI debe tener 8 dígitos numéricos.');
+                    isValid = false;
+                }
+                
+                // Validar teléfono si es vendedor
+                if (formType === 'seller') {
+                    const phone = this.querySelector('input[name="telefono"]').value;
+                    const phoneRegex = /^\d{9}$/;
+                    if (!phoneRegex.test(phone)) {
+                        e.preventDefault();
+                        alert('El teléfono debe tener 9 dígitos numéricos.');
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
             });
         });
     </script>

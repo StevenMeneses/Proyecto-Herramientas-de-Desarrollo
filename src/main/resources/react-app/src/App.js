@@ -11,6 +11,7 @@ import Collares from './pages/Collares';
 import Aros from './pages/Aros';
 import NuestroTrabajo from './pages/NuestroTrabajo';
 import GestionVentas from './pages/GestionVentas';
+import GestionProductos from './components/GestionProductos';
 
 // Importar contextos
 import { CartProvider } from './context/CartContext';
@@ -361,15 +362,24 @@ function App() {
                   </>
                 } />
 
-                {/* Rutas para las categorías */}
-                <Route path="/anillos" element={<Anillos />} />
-                <Route path="/aretes" element={<Aretes />} />
-                <Route path="/brazaletes" element={<Brazaletes />} />
-                <Route path="/collares" element={<Collares />} />
-                <Route path="/aros" element={<Aros />} />
-                <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
-                <Route path="/gestion-ventas" element={<GestionVentas />} />
-              </Routes>
+{           /* Rutas para las categorías (EXISTENTES) */}
+            {/* Rutas para las categorías PÚBLICAS */}
+            <Route path="/anillos" element={<Anillos />} />
+            <Route path="/aretes" element={<Aretes />} />
+            <Route path="/brazaletes" element={<Brazaletes />} />
+            <Route path="/aros" element={<Aros />} />
+            <Route path="/collares" element={<Collares />} />
+  <         Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+    
+            {/* Rutas de gestión (NUEVAS - AGREGA ESTAS LÍNEAS) */}
+            <Route path="/gestion-ventas" element={<GestionVentas />} />
+            <Route path="/gestion/anillos" element={<GestionProductos categoria="anillos" />} />
+            <Route path="/gestion/aretes" element={<GestionProductos categoria="aretes" />} />
+            <Route path="/gestion/brazaletes" element={<GestionProductos categoria="brazaletes" />} />
+            <Route path="/gestion/aros" element={<GestionProductos categoria="aros" />} />
+            <Route path="/gestion/collares" element={<GestionProductos categoria="collares" />} />
+            <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+            </Routes>
             </main>
 
             {/* Footer Completo */}

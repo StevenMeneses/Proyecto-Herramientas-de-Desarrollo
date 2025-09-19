@@ -1,3 +1,4 @@
+// GestionVentas.js - Página principal de gestión
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../components/Products.css';
@@ -98,27 +99,27 @@ const GestionVentas = () => {
             <h2>Gestión de Productos</h2>
             <p>Administra los productos por categoría:</p>
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '2rem'}}>
-              <Link to="/anillos" className="action-card" style={{textDecoration: 'none'}}>
+              <Link to="/gestion/anillos" className="action-card" style={{textDecoration: 'none'}}>
                 <i className="fas fa-ring" style={{fontSize: '2rem', color: 'var(--gold-primary)'}}></i>
                 <h3>Anillos</h3>
                 <p>Gestionar productos de anillos</p>
               </Link>
-              <Link to="/aretes" className="action-card" style={{textDecoration: 'none'}}>
+              <Link to="/gestion/aretes" className="action-card" style={{textDecoration: 'none'}}>
                 <i className="fas fa-gem" style={{fontSize: '2rem', color: 'var(--gold-primary)'}}></i>
                 <h3>Aretes</h3>
                 <p>Gestionar productos de aretes</p>
               </Link>
-              <Link to="/brazaletes" className="action-card" style={{textDecoration: 'none'}}>
+              <Link to="/gestion/brazaletes" className="action-card" style={{textDecoration: 'none'}}>
                 <i className="fas fa-bracelet" style={{fontSize: '2rem', color: 'var(--gold-primary)'}}></i>
                 <h3>Brazaletes</h3>
                 <p>Gestionar productos de brazaletes</p>
               </Link>
-              <Link to="/aros" className="action-card" style={{textDecoration: 'none'}}>
+              <Link to="/gestion/aros" className="action-card" style={{textDecoration: 'none'}}>
                 <i className="fas fa-circle" style={{fontSize: '2rem', color: 'var(--gold-primary)'}}></i>
                 <h3>Aros</h3>
                 <p>Gestionar productos de aros</p>
               </Link>
-              <Link to="/collares" className="action-card" style={{textDecoration: 'none'}}>
+              <Link to="/gestion/collares" className="action-card" style={{textDecoration: 'none'}}>
                 <i className="fas fa-necklace" style={{fontSize: '2rem', color: 'var(--gold-primary)'}}></i>
                 <h3>Collares</h3>
                 <p>Gestionar productos de collares</p>
