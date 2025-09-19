@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+
 // Importar páginas
 import Anillos from './pages/Anillos';
 import Aretes from './pages/Aretes';
@@ -12,10 +13,14 @@ import Aros from './pages/Aros';
 import NuestroTrabajo from './pages/NuestroTrabajo';
 import GestionVentas from './pages/GestionVentas';
 import GestionProductos from './components/GestionProductos';
+import Perfil from './pages/Perfil';
+import Pedidos from './pages/Pedidos';
+import Configuracion from './pages/Configuracion';
 
 // Importar contextos
-import { CartProvider } from './context/CartContext';
-import { FavoritesProvider } from './context/FavoriteContext';
+// Cambia tus imports en App.js:
+import { CartProvider, getCartCountFromStorage } from './context/CartContext';
+import { FavoritesProvider, getFavoritesCountFromStorage } from './context/FavoriteContext';
 
 // Importar componentes de paneles
 import CartPanel from './components/CartPanel';
@@ -27,6 +32,18 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [badgeUpdate, setBadgeUpdate] = useState(0);
+
+  useEffect(() => {
+    // Actualizar badges cada segundo
+    const interval = setInterval(() => {
+      setBadgeUpdate(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+  
+ 
 
   // Obtener datos del usuario al cargar el componente
   useEffect(() => {
@@ -136,24 +153,15 @@ function App() {
                 </div>
                 
                 <div className="right-section">
-                  <button 
-                    className="icon-link" 
-                    title="Favoritos"
-                    onClick={() => setIsFavoritesOpen(true)}
-                  >
-                    <i className="fa-regular fa-heart"></i>
-                    <span className="icon-badge">3</span>
-                  </button>
-                  
-                  <button 
-                    className="icon-link" 
-                    title="Carrito"
-                    onClick={() => setIsCartOpen(true)}
-                  >
-                    <i className="fas fa-shopping-cart"></i>
-                    <span className="icon-badge">5</span>
-                  </button>
-                  
+                <button className="icon-link" title="Favoritos" onClick={() => setIsFavoritesOpen(true)}>
+                <i className="fa-regular fa-heart"></i>
+                <span className="icon-badge">{getFavoritesCountFromStorage()}</span>
+                </button>
+
+                <button className="icon-link" title="Carrito" onClick={() => setIsCartOpen(true)}>
+                <i className="fas fa-shopping-cart"></i>
+                <span className="icon-badge">{getCartCountFromStorage()}</span>
+                </button>
                   <div className="user-dropdown">
                     <button className="user-btn">
                       <i className="fa-regular fa-user"></i>
@@ -369,7 +377,10 @@ function App() {
             <Route path="/brazaletes" element={<Brazaletes />} />
             <Route path="/aros" element={<Aros />} />
             <Route path="/collares" element={<Collares />} />
-  <         Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+            <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/pedidos" element={<Pedidos />} />
+            <Route path="/configuracion" element={<Configuracion />} />
     
             {/* Rutas de gestión (NUEVAS - AGREGA ESTAS LÍNEAS) */}
             <Route path="/gestion-ventas" element={<GestionVentas />} />

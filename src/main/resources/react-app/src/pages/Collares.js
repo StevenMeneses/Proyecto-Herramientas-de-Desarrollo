@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { CartContext } from '../context/CartContext';
-import { FavoritesContext } from '../context/FavoriteContext';
+import React, { useState, useEffect } from 'react';
+import { useCart } from '../context/CartContext';
+import { useFavorites } from '../context/FavoriteContext';
 import '../components/Products.css';
 
 const Collares = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const { addToCart } = useContext(CartContext);
-  const { addToFavorites, removeFromFavorites, isFavorite } = useContext(FavoritesContext);
+  const { addToCart } = useCart();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
 
   // Clave para localStorage
   const STORAGE_KEY = 'joyeria_productos';
@@ -90,7 +90,7 @@ const Collares = () => {
     <div className="products-page">
       <div className="page-header">
         <h1 className="page-title">Collares</h1>
-        <p className="page-subtitle">Collares que complementan tu look</p>
+        <p className="page-subtitle">Descubre nuestra colección de Collares</p>
       </div>
 
       {/* Filtros y búsqueda */}

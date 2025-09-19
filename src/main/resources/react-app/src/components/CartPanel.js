@@ -1,9 +1,34 @@
+// src/components/CartPanel.js
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import './CartPanel.css';
 
+// Función para obtener imagen desde localStorage
+const obtenerImagen = (imagePath) => {
+  if (!imagePath) return '/images/placeholder-product.jpg';
+  
+  try {
+    const imagenesGuardadas = JSON.parse(localStorage.getItem('joyeria_imagenes') || '{}');
+    return imagenesGuardadas[imagePath] || imagePath;
+  } catch (error) {
+    console.error('Error al obtener imagen:', error);
+    return imagePath || '/images/placeholder-product.jpg';
+  }
+};
+
 const CartPanel = ({ isOpen, onClose }) => {
-  const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount } = useCart();
+
+  const handleCheckout = () => {
+    onClose();
+    // Redirigir a la página de pedidos
+    window.location.href = '/pedidos';
+  };
+
+  // Manejador de errores de imagen
+  const handleImageError = (e) => {
+    e.target.src = '/images/placeholder-product.jpg';
+  };
 
   if (!isOpen) return null;
 
@@ -12,7 +37,7 @@ const CartPanel = ({ isOpen, onClose }) => {
       <div className="panel-overlay" onClick={onClose}></div>
       <div className="cart-panel">
         <div className="panel-header">
-          <h2>Tu Carrito</h2>
+          <h2>Tu Carrito ({getCartItemsCount()} items)</h2>
           <button className="close-panel" onClick={onClose}>×</button>
         </div>
         
@@ -28,9 +53,10 @@ const CartPanel = ({ isOpen, onClose }) => {
                 {cartItems.map(item => (
                   <div key={item.idProducto} className="cart-item">
                     <img 
-                      src={item.imagenUrl || '/images/placeholder-product.jpg'} 
+                      src={obtenerImagen(item.imagenUrl)} 
                       alt={item.nombreProducto}
                       className="cart-item-image"
+                      onError={handleImageError}
                     />
                     <div className="cart-item-details">
                       <h4>{item.nombreProducto}</h4>
@@ -55,11 +81,22 @@ const CartPanel = ({ isOpen, onClose }) => {
               
               <div className="cart-total">
                 <div className="total-row">
-                  <span>Total:</span>
+                  <span>Subtotal:</span>
                   <span>S/ {getCartTotal().toFixed(2)}</span>
                 </div>
-                <button className="checkout-btn">
-                  Pagar (S/ {getCartTotal().toFixed(2)})
+                <div className="total-row">
+                  <span>Envío:</span>
+                  <span>S/ 15.00</span>
+                </div>
+                <div className="total-row grand-total">
+                  <span>Total:</span>
+                  <span>S/ {(getCartTotal() + 15).toFixed(2)}</span>
+                </div>
+                <button 
+                  className="checkout-btn"
+                  onClick={handleCheckout}
+                >
+                  Proceder al Pago (S/ {(getCartTotal() + 15).toFixed(2)})
                 </button>
               </div>
             </>

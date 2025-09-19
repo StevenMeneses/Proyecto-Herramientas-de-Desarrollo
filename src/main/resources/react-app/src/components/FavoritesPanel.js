@@ -1,9 +1,28 @@
+// src/components/FavoritesPanel.js
 import React from 'react';
 import { useFavorites } from '../context/FavoriteContext';
 import './FavoritesPanel.css';
 
+// Función para obtener imagen desde localStorage
+const obtenerImagen = (imagePath) => {
+  if (!imagePath) return '/images/placeholder-product.jpg';
+  
+  try {
+    const imagenesGuardadas = JSON.parse(localStorage.getItem('joyeria_imagenes') || '{}');
+    return imagenesGuardadas[imagePath] || imagePath;
+  } catch (error) {
+    console.error('Error al obtener imagen:', error);
+    return imagePath || '/images/placeholder-product.jpg';
+  }
+};
+
 const FavoritesPanel = ({ isOpen, onClose }) => {
   const { favorites, removeFromFavorites } = useFavorites();
+
+  // Manejador de errores de imagen
+  const handleImageError = (e) => {
+    e.target.src = '/images/placeholder-product.jpg';
+  };
 
   if (!isOpen) return null;
 
@@ -33,9 +52,10 @@ const FavoritesPanel = ({ isOpen, onClose }) => {
               {favorites.map(item => (
                 <div key={item.idProducto} className="favorite-item">
                   <img 
-                    src={item.imagenUrl || '/images/placeholder-product.jpg'} 
+                    src={obtenerImagen(item.imagenUrl)} 
                     alt={item.nombreProducto}
                     className="favorite-item-image"
+                    onError={handleImageError}
                   />
                   <div className="favorite-item-details">
                     <h4>{item.nombreProducto}</h4>

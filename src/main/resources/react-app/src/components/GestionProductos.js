@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Products.css';
 
-const GestionProductos = () => {
-  const { categoria } = useParams();
+const GestionProductos = ({ categoria }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -50,18 +49,23 @@ const GestionProductos = () => {
     colecciones: []
   });
 
+  // Estado para controlar la categoría original durante la edición
+  const [originalCategory, setOriginalCategory] = useState(categoryId);
+
   // Claves para localStorage
   const STORAGE_KEY = 'joyeria_productos';
   const IMAGES_STORAGE_KEY = 'joyeria_imagenes';
 
   // Función para obtener imagen desde localStorage o ruta
   const obtenerImagen = useCallback((imagePath) => {
+    if (!imagePath) return '/images/placeholder-product.jpg';
+    
     try {
       const imagenesGuardadas = JSON.parse(localStorage.getItem(IMAGES_STORAGE_KEY) || '{}');
       return imagenesGuardadas[imagePath] || imagePath;
     } catch (error) {
       console.error('Error al obtener imagen:', error);
-      return imagePath;
+      return '/images/placeholder-product.jpg';
     }
   }, []);
 
@@ -89,9 +93,10 @@ const GestionProductos = () => {
   const saveProductsToStorage = useCallback((productsData) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(productsData));
+      return true;
     } catch (error) {
       console.error('Error al guardar productos en localStorage:', error);
-      alert('Error al guardar los cambios.');
+      return false;
     }
   }, []);
 
@@ -152,14 +157,6 @@ const GestionProductos = () => {
         setUser({ idRol: 1, nombre: 'Administrador' });
         setProducts([]);
         setFilteredProducts([]);
-        setCollections(['nueva', 'exclusivo', 'clasico', 'limitado', 'oferta']);
-        setCategories([
-          { id: 1, nombre: 'Anillos' },
-          { id: 2, nombre: 'Aretes' },
-          { id: 3, nombre: 'Brazaletes' },
-          { id: 4, nombre: 'Aros' },
-          { id: 5, nombre: 'Collares' }
-        ]);
       } finally {
         setIsLoading(false);
       }
@@ -171,8 +168,8 @@ const GestionProductos = () => {
   // Filtrar productos
   useEffect(() => {
     let filtered = products.filter(product => 
-      product.nombreProducto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+      product.nombreProducto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (selectedCollection !== 'all') {
@@ -190,7 +187,7 @@ const GestionProductos = () => {
   };
 
   const handleCollectionFilter = (collection) => {
-    setSelectedCollection(collection === selectedCollection ? 'all' : collection);
+    setSelectedCollection(collection);
   };
 
   const handleFormChange = (e) => {
@@ -204,7 +201,6 @@ const GestionProductos = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validaciones
       if (!file.type.startsWith('image/')) {
         alert('Por favor, selecciona solo archivos de imagen');
         return;
@@ -224,11 +220,10 @@ const GestionProductos = () => {
         const timestamp = new Date().getTime();
         const extension = file.name.split('.').pop();
         const fileName = `producto_${timestamp}.${extension}`;
-        const categoriaNombre = categoryNames[categoryId].toLowerCase();
         
         setFormData(prev => ({
           ...prev,
-          imagenUrl: `/images/productos/${categoriaNombre}/${fileName}`
+          imagenUrl: `/images/productos/${fileName}`
         }));
       };
       reader.readAsDataURL(file);
@@ -255,6 +250,8 @@ const GestionProductos = () => {
       idCategoria: product.idCategoria,
       colecciones: product.colecciones || []
     });
+    // Guardar la categoría original para referencia
+    setOriginalCategory(product.idCategoria);
     setIsEditMode(true);
     setIsManagementOpen(true);
     setImagenPreview(null);
@@ -267,14 +264,16 @@ const GestionProductos = () => {
         const allProducts = loadProductsFromStorage();
         const updatedProducts = allProducts[categoryId].filter(p => p.idProducto !== productId);
         allProducts[categoryId] = updatedProducts;
-        saveProductsToStorage(allProducts);
-        setProducts(updatedProducts);
         
-        // Mostrar notificación
-        mostrarNotificacion('Producto eliminado exitosamente', 'success');
+        if (saveProductsToStorage(allProducts)) {
+          setProducts(updatedProducts);
+          alert('Producto eliminado exitosamente');
+        } else {
+          alert('Error al guardar los cambios');
+        }
       } catch (error) {
         console.error('Error eliminando producto:', error);
-        mostrarNotificacion('Error al eliminar el producto', 'error');
+        alert('Error al eliminar el producto');
       }
     }
   };
@@ -290,6 +289,8 @@ const GestionProductos = () => {
       idCategoria: categoryId,
       colecciones: []
     });
+    // Establecer la categoría original como la categoría actual
+    setOriginalCategory(categoryId);
     setIsEditMode(false);
     setIsManagementOpen(true);
     setImagenPreview(null);
@@ -299,11 +300,17 @@ const GestionProductos = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Validaciones básicas
+      if (!formData.nombreProducto || !formData.precio || !formData.stock) {
+        alert('Por favor completa todos los campos obligatorios');
+        return;
+      }
+
       // Si hay una nueva imagen, guardarla
       if (imagenFile) {
         const guardadoExitoso = await guardarImagenEnStorage(imagenFile, formData.imagenUrl);
         if (!guardadoExitoso) {
-          mostrarNotificacion('Error al guardar la imagen', 'error');
+          alert('Error al guardar la imagen');
           return;
         }
       }
@@ -311,25 +318,45 @@ const GestionProductos = () => {
       const allProducts = loadProductsFromStorage();
       
       if (isEditMode) {
+        // Si la categoría cambió, mostrar confirmación
+        const categoriaCambio = originalCategory !== parseInt(formData.idCategoria);
+        
+        if (categoriaCambio) {
+          const confirmar = window.confirm(
+            `¿Estás seguro de que quieres mover este producto a la categoría ${categoryNames[formData.idCategoria]}?`
+          );
+          
+          if (!confirmar) {
+            return; // Cancelar si el usuario no confirma
+          }
+        }
+        
         // Actualizar producto existente
-        const updatedProducts = allProducts[formData.idCategoria].map(p => 
-          p.idProducto === formData.idProducto ? { ...p, ...formData } : p
+        const updatedProducts = allProducts[originalCategory].filter(p => 
+          p.idProducto !== formData.idProducto
         );
         
-        if (formData.idCategoria !== categoryId) {
-          allProducts[categoryId] = allProducts[categoryId].filter(p => p.idProducto !== formData.idProducto);
-          allProducts[formData.idCategoria] = updatedProducts;
-        } else {
-          allProducts[formData.idCategoria] = updatedProducts;
+        allProducts[originalCategory] = updatedProducts;
+        
+        // Agregar el producto a la nueva categoría
+        if (!allProducts[formData.idCategoria]) {
+          allProducts[formData.idCategoria] = [];
         }
         
-        saveProductsToStorage(allProducts);
+        allProducts[formData.idCategoria].push(formData);
         
-        if (formData.idCategoria === categoryId) {
-          setProducts(updatedProducts);
+        if (saveProductsToStorage(allProducts)) {
+          // Si estamos en la categoría original, actualizar la vista
+          if (originalCategory === categoryId) {
+            setProducts(updatedProducts);
+          }
+          // Si estamos en la nueva categoría, recargar los productos
+          else if (parseInt(formData.idCategoria) === categoryId) {
+            setProducts(allProducts[categoryId]);
+          }
+          
+          alert('Producto actualizado exitosamente');
         }
-        
-        mostrarNotificacion('Producto actualizado exitosamente', 'success');
       } else {
         // Crear nuevo producto
         let maxId = 0;
@@ -349,53 +376,23 @@ const GestionProductos = () => {
         }
         
         allProducts[newProduct.idCategoria].push(newProduct);
-        saveProductsToStorage(allProducts);
         
-        if (newProduct.idCategoria === categoryId) {
-          setProducts(prev => [...prev, newProduct]);
+        if (saveProductsToStorage(allProducts)) {
+          // Si estamos en la categoría del nuevo producto, actualizar la vista
+          if (newProduct.idCategoria === categoryId) {
+            setProducts(prev => [...prev, newProduct]);
+          }
+          alert('Producto creado exitosamente');
         }
-        
-        mostrarNotificacion('Producto creado exitosamente', 'success');
       }
       
-      // Cerrar modal y resetear
+      // Cerrar modal
       setIsManagementOpen(false);
-      setFormData({
-        idProducto: '',
-        nombreProducto: '',
-        descripcion: '',
-        precio: '',
-        stock: '',
-        imagenUrl: '',
-        idCategoria: categoryId,
-        colecciones: []
-      });
-      setImagenPreview(null);
-      setImagenFile(null);
       
     } catch (error) {
       console.error('Error guardando producto:', error);
-      mostrarNotificacion('Error al guardar el producto', 'error');
+      alert('Error al guardar el producto');
     }
-  };
-
-  const mostrarNotificacion = (mensaje, tipo = 'info') => {
-    // Crear elemento de notificación
-    const notification = document.createElement('div');
-    notification.className = `notification ${tipo}`;
-    notification.innerHTML = `
-      <span>${mensaje}</span>
-      <button onclick="this.parentElement.remove()">×</button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto-eliminar después de 3 segundos
-    setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove();
-      }
-    }, 3000);
   };
 
   const canManageProducts = user && (user.idRol === 1 || user.idRol === 2);
@@ -534,6 +531,9 @@ const GestionProductos = () => {
                   <span className="product-price">S/ {product.precio}</span>
                   <span className="product-stock">{product.stock} disponibles</span>
                 </div>
+                <div className="product-category-badge">
+                  {categoryNames[product.idCategoria]}
+                </div>
               </div>
             </div>
           ))
@@ -596,6 +596,13 @@ const GestionProductos = () => {
                     </select>
                   </div>
                 </div>
+
+                {isEditMode && originalCategory !== parseInt(formData.idCategoria) && (
+                  <div className="category-change-warning">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <span>Estás cambiando la categoría de este producto. Se moverá a {categoryNames[formData.idCategoria]} al guardar.</span>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>Descripción *</label>

@@ -1,11 +1,13 @@
-// GestionVentas.js - Página principal de gestión
+// src/pages/GestionVentas.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import SalesCharts from '../components/SalesCharts';
 import '../components/Products.css';
+import '../components/SalesCharts.css';
 
 const GestionVentas = () => {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('productos');
+  const [activeTab, setActiveTab] = useState('ventas');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -69,18 +71,18 @@ const GestionVentas = () => {
       <div className="products-filters">
         <div className="category-filter">
           <button
-            className={`filter-btn ${activeTab === 'productos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('productos')}
-          >
-            <i className="fas fa-box"></i>
-            Productos
-          </button>
-          <button
             className={`filter-btn ${activeTab === 'ventas' ? 'active' : ''}`}
             onClick={() => setActiveTab('ventas')}
           >
             <i className="fas fa-chart-line"></i>
-            Ventas
+            Reportes de Ventas
+          </button>
+          <button
+            className={`filter-btn ${activeTab === 'productos' ? 'active' : ''}`}
+            onClick={() => setActiveTab('productos')}
+          >
+            <i className="fas fa-box"></i>
+            Gestión de Productos
           </button>
           <button
             className={`filter-btn ${activeTab === 'colecciones' ? 'active' : ''}`}
@@ -94,6 +96,8 @@ const GestionVentas = () => {
 
       {/* Contenido de las pestañas */}
       <div className="management-section">
+        {activeTab === 'ventas' && <SalesCharts />}
+
         {activeTab === 'productos' && (
           <div>
             <h2>Gestión de Productos</h2>
@@ -125,13 +129,6 @@ const GestionVentas = () => {
                 <p>Gestionar productos de collares</p>
               </Link>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'ventas' && (
-          <div>
-            <h2>Reportes de Ventas</h2>
-            <p>Funcionalidad de reportes de ventas en desarrollo...</p>
           </div>
         )}
 
