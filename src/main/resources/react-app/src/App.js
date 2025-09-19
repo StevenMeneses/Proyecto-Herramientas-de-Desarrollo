@@ -12,6 +12,10 @@ import Aros from './pages/Aros';
 import NuestroTrabajo from './pages/NuestroTrabajo';
 import GestionVentas from './pages/GestionVentas';
 import GestionProductos from './components/GestionProductos';
+import Nosotros from './pages/Nosotros';
+import Contacto from './pages/Contacto';
+import TerminosCondiciones from './pages/TerminosCondiciones';
+import PreguntasFrecuentes from './pages/PreguntasFrecuentes';
 
 // Importar contextos
 import { CartProvider } from './context/CartContext';
@@ -20,6 +24,7 @@ import { FavoritesProvider } from './context/FavoriteContext';
 // Importar componentes de paneles
 import CartPanel from './components/CartPanel';
 import FavoritesPanel from './components/FavoritesPanel';
+import Privacidad from './pages/Privacidad';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -132,7 +137,9 @@ function App() {
                 </div>
                 
                 <div className="center-section">
-                  <h1 className="store-title">Marly Handmade</h1>
+                  <Link to="/" className="store-title">
+                        Marly Handmade
+                  </Link>
                 </div>
                 
                 <div className="right-section">
@@ -357,19 +364,21 @@ function App() {
                             <p>Administra productos y colecciones</p>
                           </Link>
                         )}
+
+
                       </div>
                     </section>
                   </>
                 } />
 
-{           /* Rutas para las categorías (EXISTENTES) */}
+            {/* Rutas para las categorías (EXISTENTES) */}
             {/* Rutas para las categorías PÚBLICAS */}
             <Route path="/anillos" element={<Anillos />} />
             <Route path="/aretes" element={<Aretes />} />
             <Route path="/brazaletes" element={<Brazaletes />} />
             <Route path="/aros" element={<Aros />} />
             <Route path="/collares" element={<Collares />} />
-  <         Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+            <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
     
             {/* Rutas de gestión (NUEVAS - AGREGA ESTAS LÍNEAS) */}
             <Route path="/gestion-ventas" element={<GestionVentas />} />
@@ -379,7 +388,15 @@ function App() {
             <Route path="/gestion/aros" element={<GestionProductos categoria="aros" />} />
             <Route path="/gestion/collares" element={<GestionProductos categoria="collares" />} />
             <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+
+            <Route path="/nosotros" element={<Nosotros />} />
+            <Route path="/contacto" element={<Contacto />} />
+            <Route path="/privacidad" element={<Privacidad />} />
+            <Route path="/terminos" element={<TerminosCondiciones />} />
+            <Route path="/preguntas" element={<PreguntasFrecuentes />} />
             </Routes>
+
+            {/* Rutas de Enlaces Utiles */}
             </main>
 
             {/* Footer Completo */}
