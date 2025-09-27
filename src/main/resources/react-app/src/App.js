@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useNavigate } from 'react-router-dom';
+
 
 
 // Importar páginas
@@ -16,9 +18,13 @@ import GestionProductos from './components/GestionProductos';
 import Perfil from './pages/Perfil';
 import Pedidos from './pages/Pedidos';
 import Configuracion from './pages/Configuracion';
+import CollectionsPanel from './components/CollectionsPanel';
+import ShopPanel from './components/ShopPanel';
+import SeaCollection from './pages/SeaCollection';
+import GestionCollection from './components/GestionCollection';
+
 
 // Importar contextos
-// Cambia tus imports en App.js:
 import { CartProvider, getCartCountFromStorage } from './context/CartContext';
 import { FavoritesProvider, getFavoritesCountFromStorage } from './context/FavoriteContext';
 
@@ -27,25 +33,112 @@ import CartPanel from './components/CartPanel';
 import FavoritesPanel from './components/FavoritesPanel';
 
 function App() {
+  
   const [usuario, setUsuario] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [badgeUpdate, setBadgeUpdate] = useState(0);
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [userRole, setUserRole] = useState(0);
+
+
+  // ESTADO PARA NEW COLLECTION
+  const [newCollectionData, setNewCollectionData] = useState({
+    title: "NEW COLLECTION",
+    subtitle: "Lovelay with a sad soul. Art you carry with you.",
+    buttonText: "Buy now",
+    description: "For over 3 years, we've handcrafted bronze, sterling silver, and TK gold jewelry in our Lima studio using the ancient art of lost-wax casting. Each piece is inspired by our local landscape, captivating culture, and the beauty of being human.",
+    images: [
+      { id: 1, url: null, title: 'Sea Conchitas', alt: 'Sea Conchitas Collection' },
+      { id: 2, url: null, title: 'Wild Flowers', alt: 'Wild Flowers Collection' },
+      { id: 3, url: null, title: 'Interplanets', alt: 'Interplanets Collection' }
+    ]
+  });
+
+  // ESTADO PARA MARLY COLLECTIONS
+  const [marlyCollectionsData, setMarlyCollectionsData] = useState({
+    bestSellers: [
+      { id: 1, url: null, title: 'Best Sellers', alt: 'Best Seller' }
+    ],
+    seaCollection: [
+      { id: 1, url: null, title: 'Sea Collection', alt: 'Sea Collection' }
+
+    ],
+    mataritaCollection: [
+      { id: 1, url: null, title: 'Matarita Collection', alt: 'Matarita Collection' },
+    ],
+    oceanBlueImage: { id: 1, url: null, title: 'Ocean Blue Monk Tree', alt: 'Ocean Blue Monk Tree Look' }
+  });
+
+  // ESTADO PARA MEET THE MAKER
+  const [meetTheMakerData, setMeetTheMakerData] = useState({
+    title: "Meet the Maker",
+    subtitle: "MEETMARLY",
+    shopInPerson: "AT THE VOLUNY SHOPPING",
+    address: "AC 30th to Nutrition (SNAH) Scan Miguel TRIKOS",
+    phones: [
+      "+33 866 368 145",
+      "+33 866 368 245 - Saturday from 18 AM - 5 PM"
+    ],
+    images: [
+      { id: 1, url: null, title: 'Marly Workshop', alt: 'Marly en su taller' },
+      { id: 2, url: null, title: 'Artisan Process', alt: 'Proceso artesanal' },
+      { id: 3, url: null, title: 'Finished Products', alt: 'Productos terminados' }
+    ]
+  });
 
   useEffect(() => {
     // Actualizar badges cada segundo
-    const interval = setInterval(() => {
+    /*const interval = setInterval(() => {
       setBadgeUpdate(prev => prev + 1);
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
-  
- 
+    // Cargar datos guardados*/
+    loadSavedData();
 
-  // Obtener datos del usuario al cargar el componente
+    // return () => clearInterval(interval);
+  }, []);
+
+  // Cargar todos los datos guardados
+  const loadSavedData = () => {
+    // Cargar rol de usuario
+    const role = parseInt(sessionStorage.getItem("userRole") || localStorage.getItem("userRole") || "0", 10);
+    setUserRole(role);
+
+    // Cargar datos de localStorage
+    const savedNewCollection = localStorage.getItem("newCollectionData");
+    const savedMarlyCollections = localStorage.getItem("marlyCollectionsData");
+    const savedMeetTheMaker = localStorage.getItem("meetTheMakerData");
+
+    if (savedNewCollection) {
+      try {
+        setNewCollectionData(JSON.parse(savedNewCollection));
+      } catch (error) {
+        console.error('Error cargando newCollectionData:', error);
+      }
+    }
+
+    if (savedMarlyCollections) {
+      try {
+        setMarlyCollectionsData(JSON.parse(savedMarlyCollections));
+      } catch (error) {
+        console.error('Error cargando marlyCollectionsData:', error);
+      }
+    }
+
+    if (savedMeetTheMaker) {
+      try {
+        setMeetTheMakerData(JSON.parse(savedMeetTheMaker));
+      } catch (error) {
+        console.error('Error cargando meetTheMakerData:', error);
+      }
+    }
+  };
+
+  // Cargar datos del usuario
   useEffect(() => {
     const fetchUsuario = async () => {
       try {
@@ -60,7 +153,6 @@ function App() {
         
         console.log('📨 Status:', response.status, response.statusText);
         
-        // Leer como texto primero para debuggear
         const responseText = await response.text();
         console.log('📝 Response:', responseText);
         
@@ -69,6 +161,13 @@ function App() {
             const userData = JSON.parse(responseText);
             console.log('✅ JSON parseado:', userData);
             setUsuario(userData);
+            
+            // Actualizar el rol del usuario
+            if (userData.idRol) {
+              setUserRole(userData.idRol);
+              // Guardar en sessionStorage
+              sessionStorage.setItem("userRole", userData.idRol.toString());
+            }
           } catch (jsonError) {
             console.error('❌ Error parseando JSON:', jsonError);
           }
@@ -81,17 +180,108 @@ function App() {
       }
     };
     
-    // Verificar si viene de un login exitoso
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('login') === 'success') {
-      // Limpiar la URL
       window.history.replaceState({}, document.title, window.location.pathname);
       fetchUsuario();
     } else {
-      // Verificar si hay sesión activa al cargar la app
       fetchUsuario();
     }
   }, []);
+
+  // Función para activar input de imagen
+const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
+  if (userRole === 1) {
+    const wantsToEdit = window.confirm('¿Quieres cambiar la imagen? Presiona "Cancelar" para entrar al vínculo.');
+
+    if (wantsToEdit) {
+      const inputId = `${collectionType}-upload-${imageId}`;
+      const fileInput = document.getElementById(inputId);
+      if (fileInput) {
+        fileInput.click();
+      }
+    } else {
+      navigate('/SeaCollection');
+    }
+  } else {
+    navigate('/SeaCollection');
+  }
+};
+
+
+  // FUNCIONES PARA NEW COLLECTION
+  const handleNewCollectionImageChange = (imageId, event) => {
+    if (userRole !== 1) return;
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updatedImages = newCollectionData.images.map(img => 
+          img.id === imageId ? { ...img, url: e.target.result } : img
+        );
+        const newData = { ...newCollectionData, images: updatedImages };
+        setNewCollectionData(newData);
+        localStorage.setItem("newCollectionData", JSON.stringify(newData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleNewCollectionTextChange = (field, value) => {
+    if (userRole !== 1) return;
+    const newData = { ...newCollectionData, [field]: value };
+    setNewCollectionData(newData);
+    localStorage.setItem("newCollectionData", JSON.stringify(newData));
+  };
+
+  // FUNCIONES PARA MARLY COLLECTIONS
+  const handleMarlyCollectionImageChange = (collectionType, imageId, event) => {
+    if (userRole !== 1) return;
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updatedData = { ...marlyCollectionsData };
+        
+        if (collectionType === 'oceanBlueImage') {
+          updatedData.oceanBlueImage = { ...updatedData.oceanBlueImage, url: e.target.result };
+        } else {
+          updatedData[collectionType] = updatedData[collectionType].map(img => 
+            img.id === imageId ? { ...img, url: e.target.result } : img
+          );
+        }
+        
+        setMarlyCollectionsData(updatedData);
+        localStorage.setItem("marlyCollectionsData", JSON.stringify(updatedData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // FUNCIONES PARA MEET THE MAKER
+  const handleMeetTheMakerImageChange = (imageId, event) => {
+    if (userRole !== 1) return;
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updatedImages = meetTheMakerData.images.map(img => 
+          img.id === imageId ? { ...img, url: e.target.result } : img
+        );
+        const newData = { ...meetTheMakerData, images: updatedImages };
+        setMeetTheMakerData(newData);
+        localStorage.setItem("meetTheMakerData", JSON.stringify(newData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMeetTheMakerTextChange = (field, value) => {
+    if (userRole !== 1) return;
+    const newData = { ...meetTheMakerData, [field]: value };
+    setMeetTheMakerData(newData);
+    localStorage.setItem("meetTheMakerData", JSON.stringify(newData));
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -104,24 +294,539 @@ function App() {
     e.preventDefault();
     if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
       try {
-        // Hacer logout en el backend - Cambiado a GET
         await fetch('/logout', {
-          method: 'GET', // Cambiado de POST a GET
+          method: 'GET',
           credentials: 'include'
         });
         
-        // Limpiar el estado del usuario
         setUsuario(null);
-        
-        // Redirigir a la página de login de Spring Boot
+        setUserRole(0);
+        sessionStorage.removeItem("userRole");
+        localStorage.removeItem("userRole");
         window.location.href = 'http://localhost:8080/login?logout=success';
       } catch (error) {
         console.error('Error durante el logout:', error);
-        // Fallback: redirigir igualmente
         window.location.href = 'http://localhost:8080/login';
       }
     }
   };
+
+  // COMPONENTE NEW COLLECTION ACTUALIZADO
+// COMPONENTE NEW COLLECTION SIMPLIFICADO
+const NewCollectionSection = () => {
+  // Estado para la imagen principal
+  const [mainImage, setMainImage] = useState(() => {
+    const saved = localStorage.getItem("newCollectionMainImage");
+    return saved || null;
+  });
+
+  // Estado para el texto
+  const [collectionText, setCollectionText] = useState(() => {
+    const saved = localStorage.getItem("newCollectionText");
+    return saved || "For over 3 years, we've handcrafted bronze, sterling silver, and 7K gold jewelry in our Lima studio using the ancient art of lost-wax casting. Each piece is inspired by our local landscape, captivating culture, and the beauty of being human.";
+  });
+
+  // Función para cambiar la imagen principal
+  const handleMainImageChange = (event) => {
+    if (userRole !== 1) return;
+    
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target.result;
+        setMainImage(imageUrl);
+        localStorage.setItem("newCollectionMainImage", imageUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Función para cambiar el texto
+  const handleTextChange = (e) => {
+    if (userRole !== 1) return;
+    const newText = e.target.value;
+    setCollectionText(newText);
+    localStorage.setItem("newCollectionText", newText);
+  };
+
+  // Función para activar input de imagen principal
+  const triggerMainImageInput = () => {
+    if (userRole !== 1) return;
+    const fileInput = document.getElementById('newcollection-main-image-upload');
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
+  return (
+    <section className="new-collection-section">
+      <div className="new-collection-container">
+        {/* Imagen Principal Grande */}
+        <div className="main-image-section">
+          <div 
+            className={`main-image-container ${userRole === 1 ? 'editable' : ''}`}
+            onClick={triggerMainImageInput}
+          >
+            <div 
+              className="main-collection-image"
+              style={{
+                backgroundImage: mainImage ? `url(${mainImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }}
+            >
+              {!mainImage && (
+                <div className="image-placeholder-content">
+                  <span className="placeholder-text">Imagen Principal New Collection</span>
+                  {userRole === 1 && (
+                    <span className="upload-hint">Haz clic para subir una imagen</span>
+                  )}
+                </div>
+              )}
+              {userRole === 1 && mainImage && (
+                <div className="image-overlay">
+                  <span className="edit-icon">📷 Cambiar imagen</span>
+                </div>
+              )}
+            </div>
+            <input 
+              type="file" 
+              id="newcollection-main-image-upload"
+              accept="image/*"
+              onChange={handleMainImageChange}
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
+
+        {/* Texto debajo de la imagen */}
+        <div className="collection-text-section">
+          {userRole === 1 ? (
+            <textarea
+              className="editable-text"
+              value={collectionText}
+              onChange={handleTextChange}
+              rows="3"
+              placeholder="Texto descriptivo de la colección..."
+            />
+          ) : (
+            <h2 className="collection-text">{collectionText}</h2>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const MostLovedSection = () => {  // ✅ Recibe userRole como prop
+  // Estado específico para Most Loved
+  const [mostLovedData, setMostLovedData] = useState(() => {
+    const saved = localStorage.getItem("mostLovedData");
+    return saved ? JSON.parse(saved) : {
+      images: [
+        { id: 1, url: null, title: 'Sea Conchitas', alt: 'Sea Conchitas Collection' },
+        { id: 2, url: null, title: 'Wild Flowers', alt: 'Wild Flowers Collection' },
+        { id: 3, url: null, title: 'Interplanets', alt: 'Interplanets Collection' }
+      ]
+    };
+  });
+
+  // Función para cambiar imágenes de Most Loved
+  const handleMostLovedImageChange = (imageId, event) => {
+    if (userRole !== 1) return;  // ✅ Ahora userRole está disponible
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updatedImages = mostLovedData.images.map(img => 
+          img.id === imageId ? { ...img, url: e.target.result } : img
+        );
+        const newData = { ...mostLovedData, images: updatedImages };
+        setMostLovedData(newData);
+        localStorage.setItem("mostLovedData", JSON.stringify(newData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Función para activar input de Most Loved
+  const triggerMostLovedInput = (imageId) => {
+    if (userRole !== 1) return;  // ✅ Ahora userRole está disponible
+    const inputId = `mostloved-upload-${imageId}`;
+    const fileInput = document.getElementById(inputId);
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
+  return (
+    <section className="most-loved-section">
+      <div className="most-loved-container">
+        <h2 className="section-subtitle">Most Loved</h2>
+        <div className="collection-grid">
+          {mostLovedData.images.map((image) => (
+            <div key={image.id} className="collection-item">
+              <div 
+                className={`image-container ${userRole === 1 ? 'editable' : ''}`}  // ✅ Ahora funciona
+                onClick={() => triggerMostLovedInput(image.id)}
+              >
+                <div 
+                  className="collection-image standard-collection-image"
+                  style={{
+                    backgroundImage: image.url ? `url(${image.url})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  }}
+                >
+                  {!image.url && <span className="image-placeholder">{image.title}</span>}
+                  {userRole === 1 && (  // ✅ Ahora funciona
+                    <div className="image-overlay">
+                      <span className="edit-icon">📷 Editar</span>
+                    </div>
+                  )}
+                </div>
+                <input 
+                  type="file" 
+                  id={`mostloved-upload-${image.id}`}
+                  accept="image/*"
+                  onChange={(e) => handleMostLovedImageChange(image.id, e)}
+                  style={{ display: 'none' }}
+                />
+              </div>
+              <h3 className="image-title">{image.title}</h3>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const MarlyCollectionsSection = () => {
+  const navigate = useNavigate(); // ✅ useNavigate dentro del componente
+
+  return (
+    <section className="marly-collections-section">
+      <div className="collections-header">
+        <h2 className="collections-title">MARLY Collections</h2>
+      </div>
+
+      {/* CONTENEDOR PRINCIPAL CON LAS 3 IMÁGENES EN HORIZONTAL */}
+      <div className="marly-collections-grid">
+        {/* BEST SELLERS - SOLO 1 IMAGEN */}
+        {marlyCollectionsData.bestSellers.slice(0, 1).map((image) => (
+          <div key={image.id} className="marly-collection-item">
+            <div 
+              className={`image-container ${userRole === 1 ? 'editable' : ''}`}
+              onClick={() => triggerImageInput('bestseller', image.id, userRole, navigate)}
+            >
+              <div 
+                className="collection-image"
+                style={{
+                  backgroundImage: image.url ? `url(${image.url})` : 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)',
+                }}
+              >
+                {!image.url && <span className="image-placeholder">Best Sellers</span>}
+                {userRole === 1 && (
+                  <div className="image-overlay">
+                    <span className="edit-icon">📷 Click para editar</span>
+                  </div>
+                )}
+              </div>
+              <input 
+                type="file" 
+                id={`bestseller-upload-${image.id}`}
+                accept="image/*"
+                onChange={(e) => handleMarlyCollectionImageChange('bestSellers', image.id, e)}
+                style={{ display: 'none' }}
+              />
+            </div>
+            {/* TÍTULO DEBAJO DE LA IMAGEN */}
+            <h3 className="collection-item-title">Best Sellers</h3>
+          </div>
+        ))}
+
+        {/* SEA COLLECTION - SOLO 1 IMAGEN */}
+        {marlyCollectionsData.seaCollection.slice(0, 1).map((image) => (
+          <div key={image.id} className="marly-collection-item">
+            <div 
+              className={`image-container ${userRole === 1 ? 'editable' : ''}`}
+              onClick={() => triggerImageInput('seacollection', image.id, userRole, navigate)}
+            >
+              <div 
+                className="collection-image"
+                style={{
+                  backgroundImage: image.url ? `url(${image.url})` : 'linear-gradient(135deg, #00cec9 0%, #0984e3 100%)',
+                }}
+              >
+                {!image.url && <span className="image-placeholder">Sea Collection</span>}
+                {userRole === 1 && (
+                  <div className="image-overlay">
+                    <span className="edit-icon">📷 Click para editar</span>
+                  </div>
+                )}
+              </div>
+              <input 
+                type="file" 
+                id={`seacollection-upload-${image.id}`}
+                accept="image/*"
+                onChange={(e) => handleMarlyCollectionImageChange('seaCollection', image.id, e)}
+                style={{ display: 'none' }}
+              />
+            </div>
+            {/* TÍTULO DEBAJO DE LA IMAGEN */}
+            <h3 className="collection-item-title">Sea Collection</h3>
+          </div>
+        ))}
+
+        {/* MATARITA COLLECTION - SOLO 1 IMAGEN */}
+        {marlyCollectionsData.mataritaCollection.slice(0, 1).map((image) => (
+          <div key={image.id} className="marly-collection-item">
+            <div 
+              className={`image-container ${userRole === 1 ? 'editable' : ''}`}
+              onClick={() => triggerImageInput('matarita', image.id, userRole, navigate)}
+            >
+              <div 
+                className="collection-image"
+                style={{
+                  backgroundImage: image.url ? `url(${image.url})` : 'linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%)',
+                }}
+              >
+                {!image.url && <span className="image-placeholder">Matarita Collection</span>}
+                {userRole === 1 && (
+                  <div className="image-overlay">
+                    <span className="edit-icon">📷 Click para editar</span>
+                  </div>
+                )}
+              </div>
+              <input 
+                type="file" 
+                id={`matarita-upload-${image.id}`}
+                accept="image/*"
+                onChange={(e) => handleMarlyCollectionImageChange('mataritaCollection', image.id, e)}
+                style={{ display: 'none' }}
+              />
+            </div>
+            {/* TÍTULO DEBAJO DE LA IMAGEN */}
+            <h3 className="collection-item-title">Matarita Collection</h3>
+          </div>
+        ))}
+      </div>
+
+      {/* Shop by look */}
+      <div className="shop-by-look">
+        <h3 className="look-title">Shop by look</h3>
+        <div className="look-container">
+          <div 
+            className={`ocean-blue-monk-tree ${userRole === 1 ? 'editable' : ''}`}
+            onClick={() => triggerImageInput('oceanblue', 1, userRole, navigate)}
+            style={{
+              backgroundImage: marlyCollectionsData.oceanBlueImage.url 
+                ? `url(${marlyCollectionsData.oceanBlueImage.url})` 
+                : 'linear-gradient(135deg, #00cec9 0%, #0984e3 100%)',
+            }}
+          >
+            {!marlyCollectionsData.oceanBlueImage.url && marlyCollectionsData.oceanBlueImage.title}
+            {userRole === 1 && (
+              <div className="image-overlay">
+                <span className="edit-icon">📷 Click para cambiar imagen</span>
+              </div>
+            )}
+            <input 
+              type="file" 
+              id="oceanblue-upload-1"
+              accept="image/*"
+              onChange={(e) => handleMarlyCollectionImageChange('oceanBlueImage', 1, e)}
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
+// COMPONENTE MEET THE MAKER - CORREGIDO (SIN TÍTULO DUPLICADO)
+  const MeetTheMakerSection = () => (
+    <section className="meet-the-maker-section">
+      <div className="meet-maker-container">
+        {/* SOLO UN ENCABEZADO - EL NUEVO ESTILO MARLY COLLECTIONS */}
+        <div className="collections-header">
+          <h2 className="collections-title">{meetTheMakerData.title}</h2>
+        </div>
+
+        {/* PARTE 1: IMAGEN PRINCIPAL */}
+        <div className="meet-maker-top">
+          <div className="meet-maker-single-image">
+            {meetTheMakerData.images.slice(0, 1).map((image) => (
+              <div key={image.id} className="maker-image-item">
+                <div 
+                  className={`image-container ${userRole === 1 ? 'editable' : ''}`}
+                  onClick={() => triggerImageInput('meetmaker', image.id)}
+                >
+                  <div 
+                    className="first-maker-image"
+                    style={{
+                      backgroundImage: image.url ? `url(${image.url})` : 'none',
+                      backgroundColor: image.url ? 'transparent' : '#f5f5f5'
+                    }}
+                  >
+                    {!image.url && <span className="image-placeholder">Meet the Maker</span>}
+                    {userRole === 1 && (
+                      <div className="image-overlay">
+                        <span className="edit-icon">📷 Editar imagen</span>
+                      </div>
+                    )}
+                  </div>
+                  <input 
+                    type="file" 
+                    id={`meetmaker-upload-${image.id}`}
+                    accept="image/*"
+                    onChange={(e) => handleMeetTheMakerImageChange(image.id, e)}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* PARTE 2: SHOP IN PERSON CON TÍTULO SECUNDARIO */}
+        <div className="shop-in-person-section">
+          <div className="shop-in-person-image">
+            {meetTheMakerData.images.slice(1, 2).map((image) => (
+              <div key={image.id} className="shop-image-item">
+                <div 
+                  className={`image-container large-image ${userRole === 1 ? 'editable' : ''}`}
+                  onClick={() => triggerImageInput('meetmaker', image.id)}
+                >
+                  <div 
+                    className="second-maker-image"
+                    style={{
+                      backgroundImage: image.url ? `url(${image.url})` : 'none',
+                      
+                    }}
+                  >
+                    {!image.url && <span className="image-placeholder">Shop in Person</span>}
+                    {userRole === 1 && (
+                      <div className="image-overlay">
+                        <span className="edit-icon">📷 Editar imagen</span>
+                      </div>
+                    )}
+                  </div>
+                  <input 
+                    type="file" 
+                    id={`meetmaker-upload-${image.id}`}
+                    accept="image/*"
+                    onChange={(e) => handleMeetTheMakerImageChange(image.id, e)}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  // FOOTER
+  const AppFooter = () => (
+    <footer className="app-footer">
+      <div className="footer-container">
+        <div className="footer-content">
+          {/* POLICY LINES */}
+          <div className="footer-section">
+            <h4>POLICY LINES</h4>
+            <ul>
+              <li><a href="/terms">Terms and Conditions</a></li>
+              <li><a href="/story">Our Story</a></li>
+              <li><a href="/delivery">Our delivery terms</a></li>
+              <li><a href="/join">Join us to get 15% off your first order</a></li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/contact">Contact Us</a></li>
+              <li className="email">contact@marly.com</li>
+              <li className="email">For wholesale inquiries: wholesale@marly.com</li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/wholesale">Drop us your email</a></li>
+              <li><a href="/shipping">Shipping Policy</a></li>
+              <li><a href="/returns">Returns - Exchange - Repairs</a></li>
+              <li><a href="/exchange">Exchange & Returns Policy</a></li>
+            </ul>
+          </div>
+          
+          {/* QUICK LINES */}
+          <div className="footer-section">
+            <h4>QUICK LINES</h4>
+            <ul>
+              <li><a href="/shop-all">SHOP ALL</a></li>
+              <li><a href="/best">Best over earphones 500</a></li>
+              <li><a href="/dose">Dose Losses</a></li>
+              <li><a href="/makeup">Makeup water? Keep all delivery</a></li>
+              <li><a href="/makeup-water">Makeup water?</a></li>
+            </ul>
+          </div>
+          
+          {/* CONTACT US */}
+          <div className="footer-section">
+            <h4>CONTACT US</h4>
+            <ul>
+              <li><a href="/contact">Our Story</a></li>
+              <li><a href="/team">Our team</a></li>
+              <li><a href="/delivery-info">Delivery information</a></li>
+              <li><a href="/join-insider">Join us to get 15% off your first order</a></li>
+              <li><a href="/privacy-policy">Privacy Policy</a></li>
+              <li><a href="/contact-form">Contact Us</a></li>
+              <li className="email">contact@marly.com</li>
+              <li className="email">For wholesale services and space: wholesale@marly.com</li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/email-list">Drop us your email</a></li>
+              <li><a href="/shipping-info">Shipping Policy</a></li>
+              <li><a href="/returns-info">Postage - Exchange - Repairs</a></li>
+              <li><a href="/exchange-info">Exchange & Repair Policy</a></li>
+            </ul>
+          </div>
+          
+          {/* BE AN INSIDER */}
+          <div className="footer-section">
+            <h4>BE AN INSIDER</h4>
+            <div className="newsletter">
+              <p>Join our newsletter for updates and offers</p>
+              <div className="newsletter-form">
+                <input type="email" placeholder="Enter your email" />
+                <button type="submit">Subscribe</button>
+              </div>
+              <div className="social-links">
+                <button className="social-btn" title="Instagram">
+                  <i className="fab fa-instagram"></i>
+                </button>
+                <button className="social-btn" title="Facebook">
+                  <i className="fab fa-facebook"></i>
+                </button>
+                <button className="social-btn" title="Pinterest">
+                  <i className="fab fa-pinterest"></i>
+                </button>
+                <button className="social-btn" title="TikTok">
+                  <i className="fab fa-tiktok"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="footer-bottom">
+          <div className="footer-brand">
+            <h3>MARLY</h3>
+            <p>@ 2025 MARLY Handmade</p>
+          </div>
+          <div className="payment-methods">
+            <span>We accept:</span>
+            <i className="fab fa-cc-visa" title="Visa"></i>
+            <i className="fab fa-cc-mastercard" title="MasterCard"></i>
+            <i className="fab fa-cc-paypal" title="PayPal"></i>
+            <i className="fab fa-cc-apple-pay" title="Apple Pay"></i>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 
   return (
     <CartProvider>
@@ -132,20 +837,36 @@ function App() {
             <header className="top-header">
               <div className="header-container">
                 <div className="left-section">
-                  <div className="hamburger-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                    <i className="fa-solid fa-bars"></i>
-                  </div>
-                  <form className="search-bar" onSubmit={handleSearch}>
-                    <input 
-                      type="text" 
-                      placeholder="Buscar en tienda..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button type="submit" className="search-btn">
-                      <i className="fas fa-search"></i>
-                    </button>
-                  </form>
+                  <nav className="nav-menu">
+                    <div className="nav-item">
+                      <button className="nav-link" onClick={() => {
+                        setIsShopOpen(!isShopOpen);
+                        setIsCollectionsOpen(false);
+                      }}>
+                        Shop
+                      </button>
+                      <ShopPanel 
+                        isOpen={isShopOpen} 
+                        onClose={() => setIsShopOpen(false)}
+                        userRole={userRole}
+                      />
+                    </div>
+                    
+                    <div className="nav-item">
+                      <button className="nav-link" onClick={() => {
+                        setIsCollectionsOpen(!isCollectionsOpen);
+                        setIsShopOpen(false);
+                      }}>
+                        Collections
+                      </button>
+                      <CollectionsPanel 
+                        isOpen={isCollectionsOpen} 
+                        onClose={() => setIsCollectionsOpen(false)} 
+                      />
+                    </div>
+                    
+                    <Link to="/nuestro-trabajo" className="nav-link">Our Story</Link>
+                  </nav>
                 </div>
                 
                 <div className="center-section">
@@ -153,15 +874,16 @@ function App() {
                 </div>
                 
                 <div className="right-section">
-                <button className="icon-link" title="Favoritos" onClick={() => setIsFavoritesOpen(true)}>
-                <i className="fa-regular fa-heart"></i>
-                <span className="icon-badge">{getFavoritesCountFromStorage()}</span>
-                </button>
+                  <button className="icon-link" title="Favoritos" onClick={() => setIsFavoritesOpen(true)}>
+                    <i className="fa-regular fa-heart"></i>
+                    <span className="icon-badge">{getFavoritesCountFromStorage()}</span>
+                  </button>
 
-                <button className="icon-link" title="Carrito" onClick={() => setIsCartOpen(true)}>
-                <i className="fas fa-shopping-cart"></i>
-                <span className="icon-badge">{getCartCountFromStorage()}</span>
-                </button>
+                  <button className="icon-link" title="Carrito" onClick={() => setIsCartOpen(true)}>
+                    <i className="fas fa-shopping-cart"></i>
+                    <span className="icon-badge">{getCartCountFromStorage()}</span>
+                  </button>
+                  
                   <div className="user-dropdown">
                     <button className="user-btn">
                       <i className="fa-regular fa-user"></i>
@@ -179,9 +901,6 @@ function App() {
                         Mi Perfil {usuario && `(${usuario.nombre})`}
                       </Link>
 
-                      {console.log('Usuario:', usuario, 'Rol:', usuario?.idRol)}
-                      
-                      {/* Mostrar Gestión de Ventas solo para administradores y vendedores */}
                       {(usuario?.idRol === 1 || usuario?.idRol === 2) && (
                         <Link to="/gestion-ventas" className="dropdown-item">
                           <i className="fas fa-store"></i>
@@ -208,125 +927,41 @@ function App() {
               </div>
             </header>
 
-            {/* Header Inferior con Categorías */}
-            <nav className="categories-header">
-              <div className="categories-container">
-                <ul className="categories-list">
-                  <li><Link to="/anillos"><i className="fas fa-ring"></i> Anillos</Link></li>
-                  <li><Link to="/aretes"><i className="fas fa-gem"></i> Aretes</Link></li>
-                  <li><Link to="/brazaletes"><i className="fas fa-bracelet"></i> Brazaletes</Link></li>
-                  <li><Link to="/aros"><i className="fas fa-circle"></i> Aros</Link></li>
-                  <li><Link to="/collares"><i className="fas fa-necklace"></i> Collares</Link></li>
-                  <li><Link to="/nuestro-trabajo"><i className="fas fa-hands"></i> Nuestro Trabajo</Link></li>
-                </ul>
-              </div>
-            </nav>
-
-            {/* Menú móvil desplegable */}
-            {isMenuOpen && (
-              <div className="mobile-menu">
-                <div className="mobile-menu-header">
-                  <h3>Marly Handmade</h3>
-                  <button className="close-menu" onClick={() => setIsMenuOpen(false)}>
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-                
-                <div className="mobile-search">
-                  <form onSubmit={handleSearch}>
-                    <input 
-                      type="text" 
-                      placeholder="Buscar productos..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button type="submit">
-                      <i className="fas fa-search"></i>
-                    </button>
-                  </form>
-                </div>
-                
-                <ul className="mobile-categories">
-                  <li><Link to="/anillos" onClick={() => setIsMenuOpen(false)}><i className="fas fa-ring"></i> Anillos</Link></li>
-                  <li><Link to="/aretes" onClick={() => setIsMenuOpen(false)}><i className="fas fa-gem"></i> Aretes</Link></li>
-                  <li><Link to="/brazaletes" onClick={() => setIsMenuOpen(false)}><i className="fas fa-bracelet"></i> Brazaletes</Link></li>
-                  <li><Link to="/aros" onClick={() => setIsMenuOpen(false)}><i className="fas fa-circle"></i> Aros</Link></li>
-                  <li><Link to="/collares" onClick={() => setIsMenuOpen(false)}><i className="fas fa-necklace"></i> Collares</Link></li>
-                  <li><Link to="/nuestro-trabajo" onClick={() => setIsMenuOpen(false)}><i className="fas fa-hands"></i> Nuestro Trabajo</Link></li>
-                </ul>
-                
-                <div className="mobile-user-menu">
-                  <Link to="/perfil" onClick={() => setIsMenuOpen(false)}><i className="fas fa-user"></i> Mi Perfil {usuario && `(${usuario.nombre})`}</Link>
-                  
-                  {/* Mostrar Gestión de Ventas solo para administradores y vendedores */}
-                  {(usuario?.idRol === 1 || usuario?.idRol === 2) && (
-                    <Link to="/gestion-ventas" onClick={() => setIsMenuOpen(false)}>
-                      <i className="fas fa-store"></i> Gestión de Ventas
-                    </Link>
-                  )}
-                  
-                  <button onClick={() => { setIsMenuOpen(false); setIsFavoritesOpen(true); }}>
-                    <i className="fas fa-heart"></i> Favoritos
-                  </button>
-                  <button onClick={() => { setIsMenuOpen(false); setIsCartOpen(true); }}>
-                    <i className="fas fa-shopping-cart"></i> Carrito
-                  </button>
-                  <Link to="/logout" onClick={(e) => { setIsMenuOpen(false); handleLogout(e); }}><i className="fas fa-sign-out-alt"></i> Cerrar Sesión</Link>
-                </div>
-              </div>
-            )}
-
-            {/* Contenido Principal con Rutas */}
+            {/* Contenido Principal */}
             <main className="main-content">
+              <section className="hero-section">
+                <div className="hero-content">
+                  <h1 className="hero-title">
+                    {usuario ? (
+                      `¡Bienvenid${usuario.idRol === 2 ? 'a' : 'o'} ${usuario.nombre} a `
+                    ) : '¡Bienvenido a '}
+                    <span className="brand-highlight">Marly Handmade</span>!
+                  </h1>
+                  <p className="hero-subtitle">
+                    {usuario ? (
+                      <>
+                        {usuario.idRol === 1 && `Administrador - ${usuario.email}`}
+                        {usuario.idRol === 2 && `Vendedor - ${usuario.email}`}
+                        {usuario.idRol === 3 && `Cliente - ${usuario.email}`}
+                      </>
+                    ) : 'Sistema de gestión de productos artesanales'}
+                  </p>
+                </div>
+              </section>
+              
               <Routes>
-                {/* Ruta para la página principal */}
                 <Route path="/" element={
                   <>
-                    <section className="hero-section">
-                      <div className="hero-content">
-                        <h1 className="hero-title">
-                          {usuario ? (
-                            `¡Bienvenid${usuario.idRol === 2 ? 'a' : 'o'} ${usuario.nombre} a `
-                          ) : '¡Bienvenido a '}
-                          <span className="brand-highlight">Marly Handmade</span>!
-                        </h1>
-                        <p className="hero-subtitle">
-                          {usuario ? (
-                            <>
-                              {usuario.idRol === 1 && `Administrador - ${usuario.email}`}
-                              {usuario.idRol === 2 && `Vendedor - ${usuario.email}`}
-                              {usuario.idRol === 3 && `Cliente - ${usuario.email}`}
-                            </>
-                          ) : 'Sistema de gestión de productos artesanales'}
-                        </p>
-                        
-                        <div className="hero-stats">
-                          <div className="stat-card">
-                            <i className="fas fa-users"></i>
-                            <h3>+500</h3>
-                            <p>Clientes satisfechos</p>
-                          </div>
-                          <div className="stat-card">
-                            <i className="fas fa-tshirt"></i>
-                            <h3>+200</h3>
-                            <p>Productos únicos</p>
-                          </div>
-                          <div className="stat-card">
-                            <i className="fas fa-star"></i>
-                            <h3>4.9/5</h3>
-                            <p>Calificación promedio</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="hero-image">
-                        <div className="floating-card admin-card">
-                          <i className="fas fa-award"></i>
-                          <h4>Calidad Premium</h4>
-                          <p>Productos 100% artesanales</p>
-                        </div>
-                      </div>
-                    </section>
+                    {/* Sección NEW COLLECTION */}
+                    <NewCollectionSection />
+
+                    {<MostLovedSection/>}
+
+                    {/* Sección MARLY COLLECTIONS */}
+                    <MarlyCollectionsSection />
+
+                    {/* Sección MEET THE MAKER */}
+                    <MeetTheMakerSection />
 
                     {/* Quick Actions Section */}
                     <section className="quick-actions">
@@ -370,97 +1005,33 @@ function App() {
                   </>
                 } />
 
-{           /* Rutas para las categorías (EXISTENTES) */}
-            {/* Rutas para las categorías PÚBLICAS */}
-            <Route path="/anillos" element={<Anillos />} />
-            <Route path="/aretes" element={<Aretes />} />
-            <Route path="/brazaletes" element={<Brazaletes />} />
-            <Route path="/aros" element={<Aros />} />
-            <Route path="/collares" element={<Collares />} />
-            <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
-            <Route path="/perfil" element={<Perfil />} />
-            <Route path="/pedidos" element={<Pedidos />} />
-            <Route path="/configuracion" element={<Configuracion />} />
-    
-            {/* Rutas de gestión (NUEVAS - AGREGA ESTAS LÍNEAS) */}
-            <Route path="/gestion-ventas" element={<GestionVentas />} />
-            <Route path="/gestion/anillos" element={<GestionProductos categoria="anillos" />} />
-            <Route path="/gestion/aretes" element={<GestionProductos categoria="aretes" />} />
-            <Route path="/gestion/brazaletes" element={<GestionProductos categoria="brazaletes" />} />
-            <Route path="/gestion/aros" element={<GestionProductos categoria="aros" />} />
-            <Route path="/gestion/collares" element={<GestionProductos categoria="collares" />} />
-            <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
-            </Routes>
+                {/* Resto de tus rutas... */}
+                <Route path="/anillos" element={<Anillos />} />
+                <Route path="/aretes" element={<Aretes />} />
+                <Route path="/brazaletes" element={<Brazaletes />} />
+                <Route path="/aros" element={<Aros />} />
+                <Route path="/collares" element={<Collares />} />
+                <Route path="/nuestro-trabajo" element={<NuestroTrabajo />} />
+                <Route path="/perfil" element={<Perfil />} />
+                <Route path="/pedidos" element={<Pedidos />} />
+                <Route path="/configuracion" element={<Configuracion />} />
+                <Route path="/shop" element={<Anillos />} />
+                <Route path="/collections" element={<Aretes />} />
+                <Route path="/SeaCollection" element={<SeaCollection />} />
+                <Route path="/gestion-ventas" element={<GestionVentas />} />
+                <Route path="/gestion/anillos" element={<GestionProductos categoria="anillos" />} />
+                <Route path="/gestion/aretes" element={<GestionProductos categoria="aretes" />} />
+                <Route path="/gestion/brazaletes" element={<GestionProductos categoria="brazaletes" />} />
+                <Route path="/gestion/aros" element={<GestionProductos categoria="aros" />} />
+                <Route path="/gestion/collares" element={<GestionProductos categoria="collares" />} />
+                <Route path="/gestion/sea-collection" element={<GestionCollection />} />
+                <Route path="/gestion/matarita-collection" element={<GestionCollection />} />
+                <Route path="/gestion/best-sellers" element={<GestionCollection />} />
+              </Routes>
             </main>
 
-            {/* Footer Completo */}
-            <footer className="app-footer">
-              <div className="footer-container">
-                <div className="footer-content">
-                  <div className="footer-section">
-                    <h4>Marly Handmade</h4>
-                    <p>Creando piezas únicas con amor y dedicación artesanal desde 2020.</p>
-                    <div className="social-links">
-                      <button className="social-btn" title="Facebook" onClick={() => alert('Facebook pronto')}>
-                        <i className="fab fa-facebook"></i>
-                      </button>
-                      <button className="social-btn" title="Instagram" onClick={() => alert('Instagram pronto')}>
-                        <i className="fab fa-instagram"></i>
-                      </button>
-                      <button className="social-btn" title="WhatsApp" onClick={() => alert('WhatsApp pronto')}>
-                        <i className="fab fa-whatsapp"></i>
-                      </button>
-                      <button className="social-btn" title="Pinterest" onClick={() => alert('Pinterest pronto')}>
-                        <i className="fab fa-pinterest"></i>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="footer-section">
-                    <h4>Categorías</h4>
-                    <ul>
-                      <li><Link to="/anillos">Anillos</Link></li>
-                      <li><Link to="/aretes">Aretes</Link></li>
-                      <li><Link to="/brazaletes">Brazaletes</Link></li>
-                      <li><Link to="/collares">Collares</Link></li>
-                      <li><Link to="/aros">Aros</Link></li>
-                    </ul>
-                  </div>
-                  
-                  <div className="footer-section">
-                    <h4>Enlaces Útiles</h4>
-                    <ul>
-                      <li><Link to="/nosotros">Sobre Nosotros</Link></li>
-                      <li><Link to="/contacto">Contacto</Link></li>
-                      <li><Link to="/preguntas">Preguntas Frecuentes</Link></li>
-                      <li><Link to="/terminos">Términos y Condiciones</Link></li>
-                      <li><Link to="/privacidad">Política de Privacidad</Link></li>
-                    </ul>
-                  </div>
-                  
-                  <div className="footer-section">
-                    <h4>Contacto</h4>
-                    <div className="contact-info">
-                      <p><i className="fas fa-map-marker-alt"></i> Av. Principal 123, Lima, Perú</p>
-                      <p><i className="fas fa-phone"></i> +51 987 654 321</p>
-                      <p><i className="fas fa-envelope"></i> hola@marlyhandmade.com</p>
-                      <p><i className="fas fa-clock"></i> Lun-Sáb: 9:00 AM - 7:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="footer-bottom">
-                  <div className="payment-methods">
-                    <span>Aceptamos:</span>
-                    <i className="fab fa-cc-visa" title="Visa"></i>
-                    <i className="fab fa-cc-mastercard" title="MasterCard"></i>
-                    <i className="fab fa-cc-paypal" title="PayPal"></i>
-                    <i className="fas fa-money-bill-wave" title="Efectivo"></i>
-                  </div>
-                  <p>&copy; 2024 Marly Handmade. Todos los derechos reservados. | Hecho con <i className="fas fa-heart" style={{color: '#e74c3c'}}></i> en Perú</p>
-                </div>
-              </div>
-            </footer>
+            {/* Footer */}
+            <AppFooter />
 
             {/* Overlay para menú móvil */}
             {isMenuOpen && <div className="menu-overlay" onClick={() => setIsMenuOpen(false)}></div>}

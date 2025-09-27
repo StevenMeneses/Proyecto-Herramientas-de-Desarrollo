@@ -604,6 +604,8 @@ const GestionProductos = ({ categoria }) => {
                   </div>
                 )}
 
+                
+
                 <div className="form-group">
                   <label>Descripción *</label>
                   <textarea

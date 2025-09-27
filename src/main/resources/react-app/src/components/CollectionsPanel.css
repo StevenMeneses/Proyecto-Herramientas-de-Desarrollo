@@ -1,0 +1,87 @@
+/* Panel como dropdown */
+.collections-panel,
+.shop-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 300px; /* Ancho más estrecho como en la imagen */
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    margin-top: 5px;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Contenedor principal */
+.panel-container {
+    padding: 0;
+}
+
+/* Navegación - DISEÑO SIMPLE COMO LA IMAGEN */
+.panel-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.panel-nav li {
+    margin: 0;
+}
+
+.panel-nav a,
+.panel-nav button {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.panel-nav a:hover,
+.panel-nav button:hover {
+    background: #f8f9fa;
+}
+
+/* Secciones en mayúsculas y negrita */
+.panel-nav .nav-section {
+    font-weight: bold;
+    color: #666;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 15px 20px 8px;
+    background: #fafafa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Items normales */
+.panel-nav .nav-item {
+    padding-left: 30px; /* Sangría para items normales */
+    font-weight: normal;
+    text-transform: none;
+}
+
+/* Featured sin sangría y diferente estilo */
+.panel-nav .nav-featured {
+    font-weight: 600;
+    color: #000;
+    background: #f8f9fa;
+}
+
+/* ELIMINAR la columna derecha completamente */
+.panel-right {
+    display: none;
+}
+
+/* Close button opcional */
+.close-btn {
+    display: none;
+}

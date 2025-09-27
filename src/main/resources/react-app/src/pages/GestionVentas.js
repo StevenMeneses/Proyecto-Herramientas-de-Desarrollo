@@ -133,11 +133,31 @@ const GestionVentas = () => {
         )}
 
         {activeTab === 'colecciones' && (
-          <div>
-            <h2>Gestión de Colecciones</h2>
-            <p>Funcionalidad de gestión de colecciones en desarrollo...</p>
-          </div>
-        )}
+  <div>
+    <h2>Gestión de Colecciones</h2>
+    <p>Selecciona la colección que deseas gestionar:</p>
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '2rem'}}>
+      
+      <Link to="/gestion/sea-collection" className="action-card" style={{textDecoration: 'none'}}>
+        <i className="fas fa-water" style={{fontSize: '2rem', color: '#667eea'}}></i>
+        <h3>Sea Collection</h3>
+        <p>Gestionar productos de la colección marina</p>
+      </Link>
+      
+      <Link to="/gestion/matarita-collection" className="action-card" style={{textDecoration: 'none'}}>
+        <i className="fas fa-cocktail" style={{fontSize: '2rem', color: '#fd79a8'}}></i>
+        <h3>Matarita Collection</h3>
+        <p>Gestionar productos exclusivos Matarita</p>
+      </Link>
+      
+      <Link to="/gestion/best-sellers" className="action-card" style={{textDecoration: 'none'}}>
+        <i className="fas fa-star" style={{fontSize: '2rem', color: '#fdcb6e'}}></i>
+        <h3>Best Sellers</h3>
+        <p>Gestionar productos más vendidos</p>
+      </Link>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );

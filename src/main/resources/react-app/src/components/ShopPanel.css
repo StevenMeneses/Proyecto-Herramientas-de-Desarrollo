@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+/* Panel dropdown más ancho, hasta "Ana Garcia" */
+.shop-panel-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 1;
+    width: 1100px; /* Más ancho */
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    margin-top: 0   px;
+    opacity: 0;
+    transform: translateY(-12px);
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 300px; /* Altura fija */
+    overflow: hidden;
+}
+
+.shop-panel-dropdown.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+/* Grid principal de columnas */
+.panel-grid {
+    display: flex;
+    height: 100%;
+    min-height: 400px;
+}
+
+/* Columnas */
+.panel-column {
+    flex: 1;
+    padding: 0;
+    border-right: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-column:last-child {
+    border-right: none;
+}
+
+/* Headers de columna */
+.column-header {
+    padding: 20px 25px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 0px solid;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.category-header {
+    background: none;
+    color: #0369a1;
+    border-bottom-color: #7dd3fc;
+}
+
+.material-header {
+    background: none;
+    color: #0c4a6e;
+    border-bottom-color: #bae6fd;
+}
+
+.featured-header {
+    background: none;
+    color: #854d0e;
+    border-bottom-color: #fde047;
+}
+
+.header-icon {
+    margin-right: 10px;
+    font-size: 12px;
+}
+
+/* Items */
+.column-items {
+    flex: 1;
+    padding: 15px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: auto;
+}
+
+.panel-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 30px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    margin: 2px 5;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 0.3px;
+}
+
+.panel-btn:hover {
+    transform: translateX(8px);
+    padding-left: 35px;
+}
+
+.panel-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 0;
+    background: currentColor;
+    transition: height 0.3s ease;
+    border-radius: 0 2px 2px 0;
+}
+
+.panel-btn:hover::before {
+    height: 60%;
+}
+
+/* Colores de botones */
+.category-btn {
+    color: #1e40af;
+    font-weight: 500;
+}
+.category-btn:hover {
+    background: linear-gradient(90deg, #dbeafe 0%, #eff6ff 100%);
+    color: #1d4ed8;
+}
+
+.material-btn {
+    color: #0f766e;
+    font-weight: 500;
+}
+.material-btn:hover {   
+    background: linear-gradient(90deg, #ccfbf1 0%, #f0fdfa 100%);
+    color: #0d9488;
+}
+
+.featured-btn {
+    color: #b45309;
+    font-weight: 600;
+}
+.featured-btn:hover {
+    background: linear-gradient(90deg, #fef3c7 0%, #fefce8 100%);
+    color: #d97706;
+}
+
+.marly-image-section {
+    margin-bottom: 15px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.marly-image-square {
+    width: 230px;
+    height: 230px;
+    border-radius: 12px;
+    border: 3px solid #e2e8f0;
+    display: flex;
+    margin-top: 40px;
+    margin-left: 15px;
+    justify-content: center;
+    
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.marly-image-square:hover {
+    transform: scale(1.08);
+    border-color: #3b82f6;
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+}
+
+.marly-letter {
+    color: white;
+    font-size: 26px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.image-overlay {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 64, 175, 0.9);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.marly-image-section:hover .image-overlay {
+    opacity: 1;
+}
+
+.camera-icon {
+    font-size: 20px;
+    color: white;
+}
+
+.image-upload-input {
+    display: none;
+}
+
+.marly-info {
+    text-align: center;
+}
+
+.marly-title {
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 12px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+
+.collection-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    margin: 6px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.sea-collection {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    color: #0369a1;
+    border: 2px solid #7dd3fc;
+}
+.sea-collection:hover {
+    background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(3, 105, 161, 0.3);
+}
+
+.matarita-collection {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #dc2626;
+    border: 2px solid #fca5a5;
+}
+.matarita-collection:hover {
+    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+    .shop-panel-dropdown {
+        width: 95vw;
+        left: 50%;
+        transform: translateX(-50%) translateY(-12px);
+    }
+    .shop-panel-dropdown.active {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .panel-grid {
+        flex-direction: column;
+        height: auto;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .panel-column {
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+        min-height: 200px;
+    }
+    .shop-panel-dropdown {
+        max-height: 500px;
+    }
+}
