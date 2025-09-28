@@ -1,76 +1,159 @@
 import React, { useState, useEffect } from 'react';
 import '../components/Collection.css';
+import { useNavigate } from 'react-router-dom';
 
-// Simulación de usuario actual
 const currentUser = {
-  rol: 1, // Cambia a otro número para probar restricciones
+  rol: 1,
 };
 
-const defaultProducts = [
-  { id: 1, name: 'Collar con conchas', price: 24, material: 'Oro', type: 'Collar' },
-  { id: 2, name: 'Pulsera azul marina', price: 50, material: 'Plata', type: 'Pulsera' },
-  { id: 3, name: 'Aretes conchas rosadas', price: 38, material: 'Resina', type: 'Aretes' },
-  { id: 4, name: 'Collar estrella de mar', price: 70, material: 'Multicolor', type: 'Collar' },
-];
-
 const SeaCollection = () => {
+  const navigate = useNavigate();
   const [headerImage, setHeaderImage] = useState(null);
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
-    price: '',
-    material: '',
-    type: '',
-    sortBy: '',
+    priceRange: { min: '', max: '' },
+    materials: [],
+    types: [],
+    sortBy: ''
   });
+  const [uploading, setUploading] = useState(false);
 
+  // Cargar imagen del header desde el backend - RUTA ESPECÍFICA
   useEffect(() => {
-    const stored = localStorage.getItem('seaProducts');
+    const loadHeaderImage = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/sea-collection-header-image');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.imageUrl) {
+            setHeaderImage(data.imageUrl);
+          }
+        }
+      } catch (error) {
+        console.error('Error al cargar la imagen del header:', error);
+      }
+    };
+
+    loadHeaderImage();
+
+    // Cargar productos desde localStorage
+    const stored = localStorage.getItem('sea-collection_products');
     if (stored) {
-      setProducts(JSON.parse(stored));
+      const productosGuardados = JSON.parse(stored);
+      
+      const productosMapeados = productosGuardados.map(producto => ({
+        id: producto.idProducto,
+        name: producto.nombreProducto,
+        price: producto.precio,
+        material: producto.material,
+        type: producto.productType || producto.tipo,
+        descripcion: producto.descripcion,
+        imagenUrl: producto.imagenUrl,
+        stock: producto.stock
+      }));
+      
+      setProducts(productosMapeados);
     } else {
-      localStorage.setItem('seaProducts', JSON.stringify(defaultProducts));
-      setProducts(defaultProducts);
+      setProducts([]);
     }
   }, []);
 
+  // Materiales únicos para los filtros
+  const uniqueMaterials = [...new Set(products.map(p => p.material))].filter(Boolean);
+  const uniqueTypes = [...new Set(products.map(p => p.type))].filter(Boolean);
+
   const filteredProducts = products
     .filter(p => {
+      const price = parseFloat(p.price) || 0;
+      const minPrice = parseFloat(filters.priceRange.min) || 0;
+      const maxPrice = parseFloat(filters.priceRange.max) || Infinity;
+      
       return (
-        (!filters.price || p.price <= parseInt(filters.price)) &&
-        (!filters.material || p.material === filters.material) &&
-        (!filters.type || p.type === filters.type)
+        price >= minPrice &&
+        price <= maxPrice &&
+        (filters.materials.length === 0 || filters.materials.includes(p.material)) &&
+        (filters.types.length === 0 || filters.types.includes(p.type))
       );
     })
     .sort((a, b) => {
-      if (filters.sortBy === 'low') return a.price - b.price;
-      if (filters.sortBy === 'high') return b.price - a.price;
+      if (filters.sortBy === 'low') return (a.price || 0) - (b.price || 0);
+      if (filters.sortBy === 'high') return (b.price || 0) - (a.price || 0);
+      if (filters.sortBy === 'name') return a.name.localeCompare(b.name);
       return 0;
     });
 
-  const handleImageChange = (e) => {
+  // RUTA ESPECÍFICA PARA SEA COLLECTION
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file && currentUser.rol === 1) {
-      const reader = new FileReader();
-      reader.onloadend = () => setHeaderImage(reader.result);
-      reader.readAsDataURL(file);
+      setUploading(true);
+      
+      const formData = new FormData();
+      formData.append('headerImage', file);
+
+      try {
+        const response = await fetch('http://localhost:5000/api/upload-sea-collection-header-image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setHeaderImage(result.imageUrl);
+          alert('Imagen subida exitosamente');
+        } else {
+          throw new Error('Error al subir la imagen');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al subir la imagen');
+      } finally {
+        setUploading(false);
+      }
     }
+  };
+
+  const obtenerImagen = (imagePath) => {
+    if (!imagePath) return '/images/placeholder-product.jpg';
+    try {
+      const imagenesGuardadas = JSON.parse(localStorage.getItem('sea-collection_images') || '{}');
+      return imagenesGuardadas[imagePath] || imagePath;
+    } catch (error) {
+      return '/images/placeholder-product.jpg';
+    }
+  };
+
+  const toggleMaterialFilter = (material) => {
+    setFilters(prev => ({
+      ...prev,
+      materials: prev.materials.includes(material)
+        ? prev.materials.filter(m => m !== material)
+        : [...prev.materials, material]
+    }));
+  };
+
+  const toggleTypeFilter = (type) => {
+    setFilters(prev => ({
+      ...prev,
+      types: prev.types.includes(type)
+        ? prev.types.filter(t => t !== type)
+        : [...prev.types, type]
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      priceRange: { min: '', max: '' },
+      materials: [],
+      types: [],
+      sortBy: ''
+    });
   };
 
   return (
     <div className="sea-collection-container">
-      {/* Header y Breadcrumb */}
-      <div className="collection-header">
-        <h1 className="collection-title"> </h1>
-        <div className="breadcrumb">
-          <span>MarlyHandmade</span>
-          <span className="breadcrumb-separator">/</span>
-          <span>SEA COLLECTION</span>
-        </div>
-      </div>
-
-      {/* Imagen destacada */}
       <div className="hero-image-section">
-        <div className="hero-image-container">
+      <div className="hero-image-container">
           {headerImage ? (
             <img src={headerImage} alt="Sea Collection Header" className="hero-image" />
           ) : (
@@ -86,97 +169,156 @@ const SeaCollection = () => {
               accept="image/*"
               onChange={handleImageChange}
               className="upload-input"
+              disabled={uploading}
             />
+            {uploading && <p>Subiendo imagen...</p>}
           </div>
         )}
       </div>
 
-      {/* Filtros */}
-      <div className="filters-section">
-        <div className="filters-container">
-          <div className="filter-group">
-            <span className="filter-label">Price</span>
-            <select
-              value={filters.price}
-              onChange={e => setFilters({ ...filters, price: e.target.value })}
-              className="filter-select"
-            >
-              <option value="">+</option>
-              <option value="25">$25</option>
-              <option value="50">$50</option>
-              <option value="75">$75</option>
-              <option value="100">$100</option>
-            </select>
-          </div>
+      {/* Filters Sidebar */}
+      <aside className="filters-sidebar">
+        <div className="filters-header">
+          <h2 className="filters-title">
+            <span className="icon-filter"></span>
+            Filters
+          </h2>
+          <button 
+            onClick={clearFilters}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Clear all
+          </button>
+        </div>
 
-          <div className="filter-group">
-            <span className="filter-label">Material</span>
-            <select
-              value={filters.material}
-              onChange={e => setFilters({ ...filters, material: e.target.value })}
-              className="filter-select"
-            >
-              <option value="">+</option>
-              <option value="Oro">Oro</option>
-              <option value="Plata">Plata</option>
-              <option value="Resina">Resina</option>
-              <option value="Multicolor">Multicolor</option>
-            </select>
+        {/* Price Filter */}
+        <div className="filter-section">
+          <div className="filter-label">
+            <span className="icon-price"></span>
+            Price
           </div>
-
-          <div className="filter-group">
-            <span className="filter-label">Product type</span>
-            <select
-              value={filters.type}
-              onChange={e => setFilters({ ...filters, type: e.target.value })}
-              className="filter-select"
-            >
-              <option value="">+</option>
-              <option value="Collar">Collar</option>
-              <option value="Pulsera">Pulsera</option>
-              <option value="Aretes">Aretes</option>
-              <option value="Anillo">Anillo</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <span className="filter-label">Sort by</span>
-            <select
-              value={filters.sortBy}
-              onChange={e => setFilters({ ...filters, sortBy: e.target.value })}
-              className="filter-select"
-            >
-              <option value="">–</option>
-              <option value="low">Precio: bajo a alto</option>
-              <option value="high">Precio: alto a bajo</option>
-              <option value="name">Nombre A-Z</option>
-            </select>
+          <div className="price-inputs">
+            <input
+              type="number"
+              placeholder="Min"
+              value={filters.priceRange.min}
+              onChange={e => setFilters(prev => ({
+                ...prev,
+                priceRange: { ...prev.priceRange, min: e.target.value }
+              }))}
+              className="price-input"
+            />
+            <span className="price-separator">-</span>
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.priceRange.max}
+              onChange={e => setFilters(prev => ({
+                ...prev,
+                priceRange: { ...prev.priceRange, max: e.target.value }
+              }))}
+              className="price-input"
+            />
           </div>
         </div>
-      </div>
 
-      {/* Productos */}
-      <div className="products-section">
+        {/* Material Filter */}
+        <div className="filter-section">
+          <div className="filter-label">
+            <span className="icon-material"></span>
+            Material
+          </div>
+          <div className="filter-options">
+            {uniqueMaterials.map(material => (
+              <div
+                key={material}
+                className={`filter-option ${filters.materials.includes(material) ? 'selected' : ''}`}
+                onClick={() => toggleMaterialFilter(material)}
+              >
+                <div className="filter-checkbox"></div>
+                <span className="filter-text">{material}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Type Filter */}
+        <div className="filter-section">
+          <div className="filter-label">
+            <span className="icon-type"></span>
+            Product type
+          </div>
+          <div className="filter-options">
+            {uniqueTypes.map(type => (
+              <div
+                key={type}
+                className={`filter-option ${filters.types.includes(type) ? 'selected' : ''}`}
+                onClick={() => toggleTypeFilter(type)}
+              >
+                <div className="filter-checkbox"></div>
+                <span className="filter-text">{type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Products Section */}
+      <main className="products-section">
+        <div className="products-header">
+          <div className="products-count">
+            {filteredProducts.length} products found
+          </div>
+          <select
+            value={filters.sortBy}
+            onChange={e => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+            className="sort-select"
+          >
+            <option value="">Sort by</option>
+            <option value="low">Price: Low to High</option>
+            <option value="high">Price: High to Low</option>
+            <option value="name">Name: A-Z</option>
+          </select>
+        </div>
+
         <div className="products-grid">
           {filteredProducts.map(product => (
             <div key={product.id} className="product-card">
+             <div 
+                className="product-image-container"
+                onClick={() => navigate(`/product/SeaCollection/${product.id}`)}
+                style={{cursor: 'pointer'}}
+              >
+                <img 
+                  src={obtenerImagen(product.imagenUrl)} 
+                  alt={product.name}
+                  className="product-image"
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder-product.jpg';
+                  }}
+                />
+              </div>
               <h3 className="product-name">{product.name}</h3>
               <p className="product-price">${product.price}</p>
               <div className="product-details">
                 <span className="product-material">🧵 {product.material}</span>
                 <span className="product-type">📦 {product.type}</span>
               </div>
+              {product.descripcion && (
+                <p className="product-description">{product.descripcion}</p>
+              )}
             </div>
           ))}
           
           {filteredProducts.length === 0 && (
             <div className="empty-state">
               <div className="empty-state-icon">🔍</div>
-              <p className="empty-state-text">No se encontraron productos con los filtros seleccionados</p>
+              <p className="empty-state-text">No products found</p>
+              <p className="empty-state-subtext">Try adjusting your filters</p>
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

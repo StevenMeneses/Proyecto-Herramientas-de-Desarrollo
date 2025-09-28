@@ -1,0 +1,839 @@
+/* GestionProductos.css - Diseño específico para Gestión de Joyas */
+.gestion-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* Header Styles */
+.gestion-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 3px solid #8b5a2b;
+  background: linear-gradient(135deg, #f9f2e7 0%, #ffffff 100%);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(139, 90, 43, 0.1);
+}
+
+.gestion-back-button {
+  background: #8b5a2b;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.gestion-back-button:hover {
+  background: #6b451c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 90, 43, 0.3);
+}
+
+.gestion-header-content {
+  text-align: center;
+  flex: 1;
+  margin: 0 2rem;
+}
+
+.gestion-page-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #5c4a2a;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.gestion-page-subtitle {
+  color: #8b5a2b;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.gestion-add-product-btn {
+  background: #d4a76a;
+  color: #2d1b0e;
+  border: none;
+  padding: 0.9rem 1.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(212, 167, 106, 0.3);
+}
+
+.gestion-add-product-btn:hover {
+  background: #c19552;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(212, 167, 106, 0.4);
+}
+
+/* Filtros y búsqueda */
+.gestion-products-filters {
+  margin-bottom: 3rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(139, 90, 43, 0.1);
+}
+
+.gestion-search-filter {
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+}
+
+.gestion-search-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.gestion-search-with-icon i {
+  position: absolute;
+  left: 1.2rem;
+  color: #8b5a2b;
+  z-index: 1;
+  font-size: 1.1rem;
+}
+
+.gestion-search-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3.2rem;
+  border: 2px solid #e8d5b7;
+  border-radius: 25px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f9f2e7;
+}
+
+.gestion-search-input:focus {
+  outline: none;
+  border-color: #8b5a2b;
+  box-shadow: 0 0 0 3px rgba(139, 90, 43, 0.1);
+  background: white;
+}
+
+.gestion-category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
+.gestion-filter-btn {
+  background: white;
+  border: 2px solid #e8d5b7;
+  padding: 0.7rem 1.5rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #5c4a2a;
+}
+
+.gestion-filter-btn:hover {
+  border-color: #d4a76a;
+  transform: translateY(-2px);
+}
+
+.gestion-filter-btn.active {
+  background: #8b5a2b;
+  color: white;
+  border-color: #8b5a2b;
+  box-shadow: 0 2px 8px rgba(139, 90, 43, 0.3);
+}
+
+/* Products Section */
+.gestion-products-section {
+  margin-top: 2rem;
+}
+
+.gestion-section-title {
+  font-size: 2rem;
+  color: #5c4a2a;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+}
+
+.gestion-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.gestion-product-card {
+  background: white;
+  border: 2px solid #f9f2e7;
+  border-radius: 15px;
+  padding: 1.5rem;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 15px rgba(139, 90, 43, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.gestion-product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(139, 90, 43, 0.2);
+  border-color: #d4a76a;
+}
+
+.gestion-product-image {
+  width: 100%;
+  height: 250px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #f9f2e7 0%, #ffffff 100%);
+  position: relative;
+}
+
+.gestion-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.gestion-product-card:hover .gestion-product-image img {
+  transform: scale(1.1);
+}
+
+.gestion-product-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #8b5a2b;
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gestion-product-admin-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.gestion-product-card:hover .gestion-product-admin-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gestion-edit-btn, .gestion-delete-btn {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.gestion-edit-btn {
+  color: #10b981;
+}
+
+.gestion-edit-btn:hover {
+  background: #10b981;
+  color: white;
+  transform: scale(1.1);
+}
+
+.gestion-delete-btn {
+  color: #ef4444;
+}
+
+.gestion-delete-btn:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.1);
+}
+
+.gestion-product-info {
+  margin-top: 1rem;
+}
+
+.gestion-product-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2d1b0e;
+  margin-bottom: 0.8rem;
+  font-family: 'Playfair Display', serif;
+  line-height: 1.3;
+}
+
+.gestion-product-description {
+  font-size: 0.95rem;
+  color: #5c4a2a;
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+  opacity: 0.9;
+}
+
+.gestion-product-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e8d5b7;
+}
+
+.gestion-product-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #8b5a2b;
+}
+
+.gestion-product-stock {
+  background: #f9f2e7;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5c4a2a;
+}
+
+.gestion-product-category {
+  background: #8b5a2b;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Empty State */
+.gestion-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #f9f2e7 0%, #ffffff 100%);
+  border-radius: 15px;
+  border: 2px dashed #d4a76a;
+}
+
+.gestion-empty-state-icon {
+  font-size: 4rem;
+  color: #d4a76a;
+  margin-bottom: 1.5rem;
+}
+
+.gestion-empty-state-text {
+  font-size: 1.8rem;
+  color: #5c4a2a;
+  margin-bottom: 1rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.gestion-empty-state-subtext {
+  color: #8b5a2b;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+/* Modal Styles */
+.gestion-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(45, 27, 14, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+  backdrop-filter: blur(5px);
+}
+
+.gestion-modal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gestion-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 2px solid #f9f2e7;
+}
+
+.gestion-modal-title {
+  font-size: 1.8rem;
+  color: #5c4a2a;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.gestion-close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #8b5a2b;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.gestion-close-modal:hover {
+  background: #f9f2e7;
+  color: #5c4a2a;
+  transform: rotate(90deg);
+}
+
+/* Form Styles */
+.gestion-management-form {
+  padding: 0 2rem 2rem;
+}
+
+.gestion-form-section {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: #f9f2e7;
+  border-radius: 12px;
+  border-left: 4px solid #d4a76a;
+}
+
+.gestion-form-section-title {
+  font-size: 1.3rem;
+  color: #5c4a2a;
+  margin-bottom: 1.2rem;
+  font-family: 'Playfair Display', serif;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gestion-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.gestion-form-group {
+  margin-bottom: 1.2rem;
+}
+
+.gestion-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #5c4a2a;
+  font-size: 0.95rem;
+}
+
+.gestion-form-group input,
+.gestion-form-group select,
+.gestion-form-group textarea {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border: 2px solid #e8d5b7;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+  font-family: inherit;
+}
+
+.gestion-form-group input:focus,
+.gestion-form-group select:focus,
+.gestion-form-group textarea:focus {
+  outline: none;
+  border-color: #8b5a2b;
+  box-shadow: 0 0 0 3px rgba(139, 90, 43, 0.1);
+}
+
+.gestion-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.gestion-input-with-icon i {
+  position: absolute;
+  left: 1rem;
+  color: #8b5a2b;
+  font-size: 1.1rem;
+}
+
+.gestion-input-with-icon input {
+  padding-left: 3rem;
+}
+
+/* Category Change Warning */
+.gestion-category-change-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.95rem;
+}
+
+.gestion-category-change-warning i {
+  color: #f39c12;
+  font-size: 1.2rem;
+}
+
+/* File Upload */
+.gestion-file-upload-container {
+  margin-bottom: 1rem;
+}
+
+.gestion-file-input {
+  display: none;
+}
+
+.gestion-file-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #8b5a2b;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.gestion-file-upload-label:hover {
+  background: #6b451c;
+  transform: translateY(-2px);
+}
+
+.gestion-file-upload-info {
+  font-size: 0.85rem;
+  color: #8b5a2b;
+  opacity: 0.8;
+}
+
+/* Image Preview */
+.gestion-image-preview {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.gestion-image-preview img {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 3px solid #d4a76a;
+  margin-bottom: 1rem;
+}
+
+.gestion-image-preview-placeholder {
+  background: #f9f2e7;
+  border: 2px dashed #d4a76a;
+  border-radius: 10px;
+  padding: 3rem 2rem;
+  color: #8b5a2b;
+  opacity: 0.7;
+}
+
+.gestion-image-preview-placeholder i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.gestion-remove-image-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.gestion-remove-image-btn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+/* Collections */
+.gestion-collections-section p {
+  color: #5c4a2a;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+.gestion-collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.8rem;
+}
+
+.gestion-collection-item {
+  background: white;
+  border: 2px solid #e8d5b7;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #5c4a2a;
+  text-transform: capitalize;
+  position: relative;
+}
+
+.gestion-collection-item:hover {
+  border-color: #d4a76a;
+  transform: translateY(-2px);
+}
+
+.gestion-collection-item.selected {
+  background: #8b5a2b;
+  color: white;
+  border-color: #8b5a2b;
+}
+
+.gestion-collection-item.selected i {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  font-size: 0.8rem;
+}
+
+/* Form Actions */
+.gestion-form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #f9f2e7;
+}
+
+.gestion-cancel-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.gestion-cancel-btn:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.gestion-submit-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.gestion-submit-btn:hover {
+  background: #0da271;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Loading State */
+.gestion-loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 2rem;
+  color: #d4a76a;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gestion-page {
+    padding: 1rem 0.5rem;
+  }
+  
+  .gestion-page-header {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .gestion-header-content {
+    margin: 0;
+  }
+  
+  .gestion-page-title {
+    font-size: 2.2rem;
+    justify-content: center;
+  }
+  
+  .gestion-form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .gestion-products-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .gestion-modal {
+    margin: 1rem;
+    max-height: 95vh;
+  }
+  
+  .gestion-management-form {
+    padding: 0 1rem 1rem;
+  }
+  
+  .gestion-form-section {
+    padding: 1rem;
+  }
+  
+  .gestion-form-actions {
+    flex-direction: column;
+  }
+  
+  .gestion-category-filter {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    justify-content: flex-start;
+  }
+  
+  .gestion-filter-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .gestion-page-title {
+    font-size: 1.8rem;
+  }
+  
+  .gestion-product-card {
+    padding: 1rem;
+  }
+  
+  .gestion-modal-header {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .gestion-form-section-title {
+    font-size: 1.1rem;
+  }
+  
+  .gestion-collections-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Scrollbar personalizado para el modal */
+.gestion-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gestion-modal::-webkit-scrollbar-track {
+  background: #f9f2e7;
+  border-radius: 0 20px 20px 0;
+}
+
+.gestion-modal::-webkit-scrollbar-thumb {
+  background: #d4a76a;
+  border-radius: 4px;
+}
+
+.gestion-modal::-webkit-scrollbar-thumb:hover {
+  background: #8b5a2b;
+}
+
+
+

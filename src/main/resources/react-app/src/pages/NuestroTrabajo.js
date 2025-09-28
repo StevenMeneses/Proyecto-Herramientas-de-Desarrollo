@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../components/Products.css';
+import '../components/CategoryProducts.css';
 
 const NuestroTrabajo = () => {
   const [products, setProducts] = useState([]);
@@ -42,7 +42,6 @@ const NuestroTrabajo = () => {
             categoria: 'Aretes',
             colecciones: ['clasico']
           },
-          // Agregar más productos de ejemplo...
         ];
         setProducts(mockProducts);
       } catch (error) {
@@ -55,38 +54,37 @@ const NuestroTrabajo = () => {
   }, []);
 
   return (
-    <div className="products-page">
-      <div className="page-header">
-        <h1 className="page-title">Nuestro Trabajo</h1>
-        <p className="page-subtitle">
+    <div className="work-page">
+      <div className="management-header">
+        <h1 className="management-title">Nuestro Trabajo</h1>
+        <p className="management-subtitle">
           Conoce el proceso artesanal detrás de cada una de nuestras piezas únicas
           {user && ` - Bienvenid${user.idRol === 2 ? 'a' : 'o'} ${user.nombre}`}
-          {user && user.idRol === 1 && ' (Administrador)'} {user && user.idRol === 2 && ' (Vendedor)'} 
+          {user && user.idRol === 1 && ' (Administrador)'} 
+          {user && user.idRol === 2 && ' (Vendedor)'} 
           {user && user.idRol === 3 && ' (Cliente)'}
         </p>
       </div>
 
-      <div className="hero-content" style={{textAlign: 'center', marginBottom: '3rem'}}>
-        <p style={{fontSize: '1.2rem', lineHeight: '1.6', maxWidth: '800px', margin: '0 auto'}}>
-          Cada pieza que creamos es el resultado de horas de dedicación, amor por el arte 
-          y compromiso con la calidad. Utilizamos técnicas tradicionales combinadas con 
-          diseños contemporáneos para ofrecerte joyas únicas que cuentan una historia.
-        </p>
+      <div className="work-description">
+        Cada pieza que creamos es el resultado de horas de dedicación, amor por el arte 
+        y compromiso con la calidad. Utilizamos técnicas tradicionales combinadas con 
+        diseños contemporáneos para ofrecerte joyas únicas que cuentan una historia.
       </div>
 
-      <div className="products-grid">
+      <div className="category-products-grid">
         {products.map(product => (
-          <div key={product.idProducto} className="product-card">
-            <div className="product-image">
+          <div key={product.idProducto} className="category-product-card">
+            <div className="category-product-image">
               <img src={product.imagenUrl} alt={product.nombreProducto} />
-              <span className="product-badge">{product.categoria}</span>
+              <span className="category-collection-badge">{product.categoria}</span>
             </div>
-            <div className="product-info">
-              <h3 className="product-name">{product.nombreProducto}</h3>
-              <p className="product-description">{product.descripcion}</p>
-              <div className="product-price">S/ {product.precio}</div>
-              <div className="product-actions">
-                <button className="btn-primary">
+            <div className="category-product-info">
+              <h3 className="category-product-name">{product.nombreProducto}</h3>
+              <p className="category-product-description">{product.descripcion}</p>
+              <div className="category-product-price">S/ {product.precio}</div>
+              <div className="category-product-actions">
+                <button className="category-btn-primary">
                   <i className="fas fa-eye"></i>
                   Ver Detalles
                 </button>
@@ -99,19 +97,19 @@ const NuestroTrabajo = () => {
       {/* Sección de proceso artesanal */}
       <div className="management-section">
         <h2 className="management-title">Nuestro Proceso Artesanal</h2>
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', marginTop: '2rem'}}>
-          <div style={{textAlign: 'center', padding: '1.5rem', background: 'var(--gold-light)', borderRadius: '10px'}}>
-            <i className="fas fa-drafting-compass" style={{fontSize: '3rem', color: 'var(--gold-primary)', marginBottom: '1rem'}}></i>
+        <div className="process-grid">
+          <div className="process-card">
+            <i className="fas fa-drafting-compass"></i>
             <h3>Diseño</h3>
             <p>Cada pieza comienza con un diseño único creado por nuestros artesanos</p>
           </div>
-          <div style={{textAlign: 'center', padding: '1.5rem', background: 'var(--gold-light)', borderRadius: '10px'}}>
-            <i className="fas fa-hammer" style={{fontSize: '3rem', color: 'var(--gold-primary)', marginBottom: '1rem'}}></i>
+          <div className="process-card">
+            <i className="fas fa-hammer"></i>
             <h3>Elaboración</h3>
             <p>Técnicas tradicionales combinadas con precisión moderna</p>
           </div>
-          <div style={{textAlign: 'center', padding: '1.5rem', background: 'var(--gold-light)', borderRadius: '10px'}}>
-            <i className="fas fa-gem" style={{fontSize: '3rem', color: 'var(--gold-primary)', marginBottom: '1rem'}}></i>
+          <div className="process-card">
+            <i className="fas fa-gem"></i>
             <h3>Acabado</h3>
             <p>Detalles perfectos y calidad excepcional en cada pieza</p>
           </div>

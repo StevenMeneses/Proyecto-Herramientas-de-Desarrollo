@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoriteContext';
-import '../components/Products.css';
+import '../components/CategoryProducts.css'; // Cambiar a nuevo CSS
 
 const Anillos = () => {
   const [products, setProducts] = useState([]);
@@ -70,7 +70,7 @@ const Anillos = () => {
     const button = document.getElementById(`cart-btn-${product.idProducto}`);
     if (button) {
       button.innerHTML = '<i class="fas fa-check"></i> ¡Agregado!';
-      button.style.background = 'var(--success)';
+      button.style.background = 'var(--category-primary)';
       setTimeout(() => {
         button.innerHTML = '<i class="fas fa-shopping-cart"></i> Agregar';
         button.style.background = '';
@@ -87,32 +87,33 @@ const Anillos = () => {
   };
 
   return (
-    <div className="products-page">
-      <div className="page-header">
-        <h1 className="page-title">Anillos</h1>
-        <p className="page-subtitle">Descubre nuestra colección de anillos</p>
+    <div className="category-page">
+      <div className="category-header">
+        <span className="category-icon">💍</span>
+        <h1 className="category-title">Anillos Exclusivos</h1>
+        <p className="category-subtitle">
+          Descubre nuestra colección de anillos elaborados con los mejores materiales y diseño único
+        </p>
       </div>
 
-      {/* Filtros y búsqueda */}
-      <div className="products-filters">
-        <div className="search-filter">
-          <input
-            type="text"
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <i className="fas fa-search search-icon"></i>
-        </div>
+      {/* Búsqueda */}
+      <div className="category-search">
+        <i className="fas fa-search category-search-icon"></i>
+        <input
+          type="text"
+          placeholder="Buscar anillos..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="category-search-input"
+        />
       </div>
 
       {/* Grid de productos */}
-      <div className="products-grid">
+      <div className="category-products-grid">
         {filteredProducts.length > 0 ? (
           filteredProducts.map(product => (
-            <div key={product.idProducto} className="product-card">
-              <div className="product-image">
+            <div key={product.idProducto} className="category-product-card jewel-sparkle">
+              <div className="category-product-image">
                 <img 
                   src={obtenerImagen(product.imagenUrl)} 
                   alt={product.nombreProducto}
@@ -120,46 +121,56 @@ const Anillos = () => {
                   loading="lazy"
                 />
                 {product.colecciones && product.colecciones.length > 0 && (
-                  <span className="product-badge">
+                  <span className="category-collection-badge">
                     {product.colecciones[0]}
                   </span>
                 )}
 
                 {/* Botón de favoritos */}
                 <button 
-                  className={`favorite-btn ${isFavorite(product.idProducto) ? 'favorited' : ''}`}
+                  className={`category-btn-secondary ${isFavorite(product.idProducto) ? 'favorited' : ''}`}
                   onClick={() => handleToggleFavorite(product)}
                   title={isFavorite(product.idProducto) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                  style={{
+                    position: 'absolute',
+                    top: '15px',
+                    right: '15px',
+                    zIndex: '2'
+                  }}
                 >
                   <i className={`${isFavorite(product.idProducto) ? 'fas' : 'far'} fa-heart`}></i>
                 </button>
               </div>
               
-              <div className="product-info">
-                <h3 className="product-name">{product.nombreProducto}</h3>
-                <p className="product-description">{product.descripcion}</p>
-                <div className="product-meta">
-                  <span className="product-price">S/ {product.precio}</span>
-                  <span className="product-stock">{product.stock} disponibles</span>
+              <div className="category-product-info">
+                <h3 className="category-product-name">{product.nombreProducto}</h3>
+                <p className="category-product-description">{product.descripcion}</p>
+                <div className="category-product-meta">
+                  <span className="category-product-price">{product.precio}</span>
+                  <span className="category-product-stock">{product.stock} disponibles</span>
                 </div>
-                <div className="product-actions">
+                <div className="category-product-details">
+                  <span className="category-product-material">{product.material || 'Material premium'}</span>
+                  <span className="category-product-type">Anillo</span>
+                </div>
+                <div className="category-product-actions">
                   <button 
                     id={`cart-btn-${product.idProducto}`}
-                    className="btn-primary"
+                    className="category-btn-primary"
                     onClick={() => handleAddToCart(product)}
                   >
                     <i className="fas fa-shopping-cart"></i>
-                    Agregar
+                    Agregar al Carrito
                   </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="no-products">
-            <i className="fas fa-search" style={{fontSize: '3rem', marginBottom: '1rem'}}></i>
-            <h3>No se encontraron productos</h3>
-            <p>Intenta con otros términos de búsqueda</p>
+          <div className="category-empty-state">
+            <span className="category-empty-icon">💍</span>
+            <h3 className="category-empty-title">No se encontraron anillos</h3>
+            <p className="category-empty-text">Intenta con otros términos de búsqueda</p>
           </div>
         )}
       </div>

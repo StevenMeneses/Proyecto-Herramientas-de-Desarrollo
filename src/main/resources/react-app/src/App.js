@@ -21,7 +21,10 @@ import Configuracion from './pages/Configuracion';
 import CollectionsPanel from './components/CollectionsPanel';
 import ShopPanel from './components/ShopPanel';
 import SeaCollection from './pages/SeaCollection';
+import MataritaCollection from './pages/MataritaCollection';
+import BestSellers from './pages/BestSellers';
 import GestionCollection from './components/GestionCollection';
+import ProductDetail from './components/ProductDetail';
 
 
 // Importar contextos
@@ -201,10 +204,42 @@ const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
         fileInput.click();
       }
     } else {
-      navigate('/SeaCollection');
+      // Navegar a la ruta correcta según la colección
+      switch(collectionType) {
+        case 'seacollection':
+          navigate('/SeaCollection');
+          break;
+        case 'matarita':
+          navigate('/MataritaCollection');
+          break;
+        case 'bestseller':
+          navigate('/BestSellers');
+          break;
+        case 'oceanblue':
+          navigate('/SeaCollection'); // o la ruta que corresponda
+          break;
+        default:
+          navigate('/');
+      }
     }
   } else {
-    navigate('/SeaCollection');
+    // Para usuarios normales, también navegar a la ruta correcta
+    switch(collectionType) {
+      case 'seacollection':
+        navigate('/SeaCollection');
+        break;
+      case 'matarita':
+        navigate('/MataritaCollection');
+        break;
+      case 'bestseller':
+        navigate('/BestSellers');
+        break;
+      case 'oceanblue':
+        navigate('/SeaCollection'); // o la ruta que corresponda
+        break;
+      default:
+        navigate('/');
+    }
   }
 };
 
@@ -870,8 +905,21 @@ const MarlyCollectionsSection = () => {
                 </div>
                 
                 <div className="center-section">
-                  <h1 className="store-title">Marly Handmade</h1>
-                </div>
+  <button 
+    className="store-title-button"
+    onClick={() => window.location.href = 'http://localhost:3000/'}
+    style={{
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      padding: '0',
+      font: 'inherit',
+      color: 'inherit'
+    }}
+  >
+    <h1 className="store-title">Marly Handmade</h1>
+  </button>
+</div>
                 
                 <div className="right-section">
                   <button className="icon-link" title="Favoritos" onClick={() => setIsFavoritesOpen(true)}>
@@ -1018,6 +1066,8 @@ const MarlyCollectionsSection = () => {
                 <Route path="/shop" element={<Anillos />} />
                 <Route path="/collections" element={<Aretes />} />
                 <Route path="/SeaCollection" element={<SeaCollection />} />
+                <Route path="/MataritaCollection" element={<MataritaCollection />} />
+                <Route path="/BestSellers" element={<BestSellers />} />
                 <Route path="/gestion-ventas" element={<GestionVentas />} />
                 <Route path="/gestion/anillos" element={<GestionProductos categoria="anillos" />} />
                 <Route path="/gestion/aretes" element={<GestionProductos categoria="aretes" />} />
@@ -1027,6 +1077,7 @@ const MarlyCollectionsSection = () => {
                 <Route path="/gestion/sea-collection" element={<GestionCollection />} />
                 <Route path="/gestion/matarita-collection" element={<GestionCollection />} />
                 <Route path="/gestion/best-sellers" element={<GestionCollection />} />
+                <Route path="/product/:collectionType/:productId" element={<ProductDetail />} />
               </Routes>
             </main>
 

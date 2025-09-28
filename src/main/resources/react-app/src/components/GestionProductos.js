@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Products.css';
+import './GestionProductos.css';
 
 const GestionProductos = ({ categoria }) => {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ const GestionProductos = ({ categoria }) => {
   // Estados para manejo de imágenes
   const [imagenPreview, setImagenPreview] = useState(null);
   const [imagenFile, setImagenFile] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Mapeo de categorías a IDs
   const categoryMap = {
@@ -54,20 +55,60 @@ const GestionProductos = ({ categoria }) => {
 
   // Claves para localStorage
   const STORAGE_KEY = 'joyeria_productos';
-  const IMAGES_STORAGE_KEY = 'joyeria_imagenes';
+  const SERVER_URL = 'http://localhost:5000';
 
-  // Función para obtener imagen desde localStorage o ruta
+  // Función para subir imagen al servidor
+  const subirImagenAlServidor = async (file) => {
+    try {
+      setUploadingImage(true);
+      console.log('📤 Iniciando subida de imagen...', file.name);
+      
+      const formData = new FormData();
+      formData.append('productImage', file);
+      formData.append('category', `category-${categoryId}`);
+
+      const response = await fetch(`${SERVER_URL}/api/upload-product-image`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return {
+          success: true,
+          imageUrl: result.imageUrl,
+          filename: result.filename
+        };
+      } else {
+        throw new Error('Error al subir la imagen');
+      }
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      return {
+        success: false,
+        error: 'Error al subir la imagen al servidor'
+      };
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Función para obtener imagen desde el servidor
   const obtenerImagen = useCallback((imagePath) => {
     if (!imagePath) return '/images/placeholder-product.jpg';
     
-    try {
-      const imagenesGuardadas = JSON.parse(localStorage.getItem(IMAGES_STORAGE_KEY) || '{}');
-      return imagenesGuardadas[imagePath] || imagePath;
-    } catch (error) {
-      console.error('Error al obtener imagen:', error);
-      return '/images/placeholder-product.jpg';
+    // Si ya es una URL completa del servidor, usarla directamente
+    if (imagePath.includes('http://localhost:5000')) {
+      return imagePath;
     }
-  }, []);
+    
+    // Si es una ruta relativa, construir la URL del servidor
+    if (imagePath.startsWith('/')) {
+      return `${SERVER_URL}${imagePath}`;
+    }
+    
+    return '/images/placeholder-product.jpg';
+  }, [SERVER_URL]);
 
   // Cargar datos desde localStorage
   const loadProductsFromStorage = useCallback(() => {
@@ -98,25 +139,6 @@ const GestionProductos = ({ categoria }) => {
       console.error('Error al guardar productos en localStorage:', error);
       return false;
     }
-  }, []);
-
-  // Guardar imagen en localStorage
-  const guardarImagenEnStorage = useCallback(async (file, imagePath) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const imagenesGuardadas = JSON.parse(localStorage.getItem(IMAGES_STORAGE_KEY) || '{}');
-          imagenesGuardadas[imagePath] = e.target.result;
-          localStorage.setItem(IMAGES_STORAGE_KEY, JSON.stringify(imagenesGuardadas));
-          resolve(true);
-        } catch (error) {
-          console.error('Error al guardar imagen:', error);
-          resolve(false);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
   }, []);
 
   // Cargar datos
@@ -216,14 +238,10 @@ const GestionProductos = ({ categoria }) => {
         setImagenPreview(e.target.result);
         setImagenFile(file);
         
-        // Generar nombre único para la imagen
-        const timestamp = new Date().getTime();
-        const extension = file.name.split('.').pop();
-        const fileName = `producto_${timestamp}.${extension}`;
-        
+        // Ya no generamos el nombre aquí, lo hará el servidor
         setFormData(prev => ({
           ...prev,
-          imagenUrl: `/images/productos/${fileName}`
+          imagenUrl: '' // Se establecerá después de subir al servidor
         }));
       };
       reader.readAsDataURL(file);
@@ -250,7 +268,6 @@ const GestionProductos = ({ categoria }) => {
       idCategoria: product.idCategoria,
       colecciones: product.colecciones || []
     });
-    // Guardar la categoría original para referencia
     setOriginalCategory(product.idCategoria);
     setIsEditMode(true);
     setIsManagementOpen(true);
@@ -289,7 +306,6 @@ const GestionProductos = ({ categoria }) => {
       idCategoria: categoryId,
       colecciones: []
     });
-    // Establecer la categoría original como la categoría actual
     setOriginalCategory(categoryId);
     setIsEditMode(false);
     setIsManagementOpen(true);
@@ -306,13 +322,21 @@ const GestionProductos = ({ categoria }) => {
         return;
       }
 
-      // Si hay una nueva imagen, guardarla
+      let imagenUrlFinal = formData.imagenUrl;
+
+      // Si hay una nueva imagen, subirla al servidor
       if (imagenFile) {
-        const guardadoExitoso = await guardarImagenEnStorage(imagenFile, formData.imagenUrl);
-        if (!guardadoExitoso) {
-          alert('Error al guardar la imagen');
+        setUploadingImage(true);
+        const uploadResult = await subirImagenAlServidor(imagenFile);
+        
+        if (!uploadResult.success) {
+          alert(uploadResult.error || 'Error al subir la imagen');
+          setUploadingImage(false);
           return;
         }
+        
+        imagenUrlFinal = uploadResult.imageUrl;
+        setUploadingImage(false);
       }
 
       const allProducts = loadProductsFromStorage();
@@ -327,7 +351,7 @@ const GestionProductos = ({ categoria }) => {
           );
           
           if (!confirmar) {
-            return; // Cancelar si el usuario no confirma
+            return;
           }
         }
         
@@ -343,15 +367,17 @@ const GestionProductos = ({ categoria }) => {
           allProducts[formData.idCategoria] = [];
         }
         
-        allProducts[formData.idCategoria].push(formData);
+        const productoActualizado = {
+          ...formData,
+          imagenUrl: imagenUrlFinal
+        };
+        
+        allProducts[formData.idCategoria].push(productoActualizado);
         
         if (saveProductsToStorage(allProducts)) {
-          // Si estamos en la categoría original, actualizar la vista
           if (originalCategory === categoryId) {
             setProducts(updatedProducts);
-          }
-          // Si estamos en la nueva categoría, recargar los productos
-          else if (parseInt(formData.idCategoria) === categoryId) {
+          } else if (parseInt(formData.idCategoria) === categoryId) {
             setProducts(allProducts[categoryId]);
           }
           
@@ -368,7 +394,8 @@ const GestionProductos = ({ categoria }) => {
         
         const newProduct = {
           ...formData,
-          idProducto: maxId + 1
+          idProducto: maxId + 1,
+          imagenUrl: imagenUrlFinal
         };
         
         if (!allProducts[newProduct.idCategoria]) {
@@ -378,7 +405,6 @@ const GestionProductos = ({ categoria }) => {
         allProducts[newProduct.idCategoria].push(newProduct);
         
         if (saveProductsToStorage(allProducts)) {
-          // Si estamos en la categoría del nuevo producto, actualizar la vista
           if (newProduct.idCategoria === categoryId) {
             setProducts(prev => [...prev, newProduct]);
           }
@@ -386,12 +412,13 @@ const GestionProductos = ({ categoria }) => {
         }
       }
       
-      // Cerrar modal
       setIsManagementOpen(false);
       
     } catch (error) {
       console.error('Error guardando producto:', error);
       alert('Error al guardar el producto');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -399,12 +426,12 @@ const GestionProductos = ({ categoria }) => {
 
   if (isLoading) {
     return (
-      <div className="products-page">
-        <div className="page-header">
-          <h1 className="page-title">Cargando...</h1>
-          <p className="page-subtitle">Cargando productos de {categoryNames[categoryId]}</p>
+      <div className="gestion-page">
+        <div className="gestion-page-header">
+          <h1 className="gestion-page-title">Cargando...</h1>
+          <p className="gestion-page-subtitle">Cargando gestión de joyas</p>
         </div>
-        <div className="loading-spinner">
+        <div className="gestion-loading">
           <i className="fas fa-spinner fa-spin"></i>
         </div>
       </div>
@@ -413,68 +440,68 @@ const GestionProductos = ({ categoria }) => {
 
   if (user && user.idRol !== 1 && user.idRol !== 2) {
     return (
-      <div className="products-page">
-        <div className="page-header">
-          <h1 className="page-title">Acceso Denegado</h1>
-          <p className="page-subtitle">No tienes permisos para acceder a esta sección</p>
+      <div className="gestion-page">
+        <div className="gestion-page-header">
+          <h1 className="gestion-page-title">Acceso Denegado</h1>
+          <p className="gestion-page-subtitle">No tienes permisos para acceder a esta sección</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="products-page gestion-page">
+    <div className="gestion-page">
       {/* Header */}
-      <div className="page-header">
+      <div className="gestion-page-header">
         <button 
-          className="back-button"
+          className="gestion-back-button"
           onClick={() => navigate('/gestion-ventas')}
         >
           <i className="fas fa-arrow-left"></i> Volver
         </button>
-        <div className="header-content">
-          <h1 className="page-title">
-            <i className="fas fa-cog"></i> Gestión de {categoryNames[categoryId]}
+        <div className="gestion-header-content">
+          <h1 className="gestion-page-title">
+            <i className="fas fa-gem"></i> Gestión de Joyas
           </h1>
-          <p className="page-subtitle">
+          <p className="gestion-page-subtitle">
             Administrando productos como {user?.idRol === 1 ? 'Administrador' : 'Vendedor'}
           </p>
         </div>
         
         <button 
-          className="add-product-btn primary-btn"
+          className="gestion-add-product-btn"
           onClick={handleAddNewProduct}
         >
           <i className="fas fa-plus"></i>
-          Nuevo Producto
+          Nueva Joya
         </button>
       </div>
 
       {/* Filtros y búsqueda */}
-      <div className="products-filters">
-        <div className="search-filter">
-          <div className="search-with-icon">
+      <div className="gestion-products-filters">
+        <div className="gestion-search-filter">
+          <div className="gestion-search-with-icon">
             <i className="fas fa-search"></i>
             <input
               type="text"
-              placeholder="Buscar productos..."
+              placeholder="Buscar joyas..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="search-input"
+              className="gestion-search-input"
             />
           </div>
         </div>
-        <div className="category-filter">
+        <div className="gestion-category-filter">
           <button
-            className={`filter-btn ${selectedCollection === 'all' ? 'active' : ''}`}
+            className={`gestion-filter-btn ${selectedCollection === 'all' ? 'active' : ''}`}
             onClick={() => setSelectedCollection('all')}
           >
-            Todos
+            Todas las Joyas
           </button>
           {collections.map(collection => (
             <button
               key={collection}
-              className={`filter-btn ${selectedCollection === collection ? 'active' : ''}`}
+              className={`gestion-filter-btn ${selectedCollection === collection ? 'active' : ''}`}
               onClick={() => handleCollectionFilter(collection)}
             >
               {collection.charAt(0).toUpperCase() + collection.slice(1)}
@@ -484,91 +511,93 @@ const GestionProductos = ({ categoria }) => {
       </div>
 
       {/* Grid de productos */}
-      <div className="products-grid">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map(product => (
-            <div key={product.idProducto} className="product-card joya-destacada">
-              <div className="product-image">
-                <img 
-                  src={obtenerImagen(product.imagenUrl)} 
-                  alt={product.nombreProducto}
-                  onError={(e) => {
-                    e.target.src = '/images/placeholder-product.jpg';
-                  }}
-                  loading="lazy"
-                />
-                {product.colecciones && product.colecciones.length > 0 && (
-                  <span className="product-badge">
-                    {product.colecciones[0]}
-                  </span>
-                )}
+      <div className="gestion-products-section">
+        <h2 className="gestion-section-title">Joyas en {categoryNames[categoryId]}</h2>
+        <div className="gestion-products-grid">
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map(product => (
+              <div key={product.idProducto} className="gestion-product-card">
+                <div className="gestion-product-image">
+                  <img 
+                    src={obtenerImagen(product.imagenUrl)} 
+                    alt={product.nombreProducto}
+                    onError={(e) => {
+                      e.target.src = '/images/placeholder-product.jpg';
+                    }}
+                    loading="lazy"
+                  />
+                  {product.colecciones && product.colecciones.length > 0 && (
+                    <span className="gestion-product-badge">
+                      {product.colecciones[0]}
+                    </span>
+                  )}
+                  
+                  {canManageProducts && (
+                    <div className="gestion-product-admin-actions">
+                      <button 
+                        className="gestion-edit-btn"
+                        onClick={() => handleEditProduct(product)}
+                        title="Editar joya"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        className="gestion-delete-btn"
+                        onClick={() => handleDeleteProduct(product.idProducto)}
+                        title="Eliminar joya"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Botones de acción para administradores */}
-                {canManageProducts && (
-                  <div className="product-admin-actions">
-                    <button 
-                      className="edit-btn"
-                      onClick={() => handleEditProduct(product)}
-                      title="Editar producto"
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => handleDeleteProduct(product.idProducto)}
-                      title="Eliminar producto"
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
+                <div className="gestion-product-info">
+                  <h3 className="gestion-product-name">{product.nombreProducto}</h3>
+                  <p className="gestion-product-description">{product.descripcion}</p>
+                  <div className="gestion-product-meta">
+                    <span className="gestion-product-price">S/ {product.precio}</span>
+                    <span className="gestion-product-stock">{product.stock} disponibles</span>
                   </div>
-                )}
-              </div>
-              
-              <div className="product-info">
-                <h3 className="product-name">{product.nombreProducto}</h3>
-                <p className="product-description">{product.descripcion}</p>
-                <div className="product-meta">
-                  <span className="product-price">S/ {product.precio}</span>
-                  <span className="product-stock">{product.stock} disponibles</span>
-                </div>
-                <div className="product-category-badge">
-                  {categoryNames[product.idCategoria]}
+                  <div className="gestion-product-category">
+                    {categoryNames[product.idCategoria]}
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="gestion-empty-state">
+              <i className="fas fa-gem gestion-empty-state-icon"></i>
+              <h3 className="gestion-empty-state-text">No hay joyas en esta categoría</h3>
+              <p className="gestion-empty-state-subtext">Comienza agregando una nueva joya</p>
+              <button className="gestion-add-product-btn" onClick={handleAddNewProduct}>
+                <i className="fas fa-plus"></i> Crear primera joya
+              </button>
             </div>
-          ))
-        ) : (
-          <div className="no-products">
-            <i className="fas fa-inbox"></i>
-            <h3>No hay productos en esta categoría</h3>
-            <p>Comienza agregando un nuevo producto</p>
-            <button className="primary-btn" onClick={handleAddNewProduct}>
-              <i className="fas fa-plus"></i> Crear primer producto
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Modal de gestión */}
       {isManagementOpen && (
-        <div className="modal-overlay">
-          <div className="modal management-modal">
-            <div className="modal-header">
-              <h2 className="modal-title">
+        <div className="gestion-modal-overlay">
+          <div className="gestion-modal">
+            <div className="gestion-modal-header">
+              <h2 className="gestion-modal-title">
                 <i className={isEditMode ? 'fas fa-edit' : 'fas fa-plus'}></i>
-                {isEditMode ? 'Editar Producto' : 'Nuevo Producto'}
+                {isEditMode ? 'Editar Joya' : 'Nueva Joya'}
               </h2>
-              <button className="close-modal" onClick={() => setIsManagementOpen(false)}>
+              <button className="gestion-close-modal" onClick={() => setIsManagementOpen(false)}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="management-form">
-              <div className="form-section">
-                <h3 className="form-section-title">Información básica</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Nombre del Producto *</label>
+            <form onSubmit={handleSubmit} className="gestion-management-form">
+              <div className="gestion-form-section">
+                <h3 className="gestion-form-section-title">Información básica</h3>
+                <div className="gestion-form-row">
+                  <div className="gestion-form-group">
+                    <label>Nombre de la Joya *</label>
                     <input
                       type="text"
                       name="nombreProducto"
@@ -579,7 +608,7 @@ const GestionProductos = ({ categoria }) => {
                     />
                   </div>
 
-                  <div className="form-group">
+                  <div className="gestion-form-group">
                     <label>Categoría *</label>
                     <select
                       name="idCategoria"
@@ -598,33 +627,31 @@ const GestionProductos = ({ categoria }) => {
                 </div>
 
                 {isEditMode && originalCategory !== parseInt(formData.idCategoria) && (
-                  <div className="category-change-warning">
+                  <div className="gestion-category-change-warning">
                     <i className="fas fa-exclamation-triangle"></i>
-                    <span>Estás cambiando la categoría de este producto. Se moverá a {categoryNames[formData.idCategoria]} al guardar.</span>
+                    <span>Estás cambiando la categoría de esta joya. Se moverá a {categoryNames[formData.idCategoria]} al guardar.</span>
                   </div>
                 )}
 
-                
-
-                <div className="form-group">
+                <div className="gestion-form-group">
                   <label>Descripción *</label>
                   <textarea
                     name="descripcion"
                     value={formData.descripcion}
                     onChange={handleFormChange}
                     required
-                    placeholder="Describe el producto detalladamente..."
+                    placeholder="Describe la joya detalladamente..."
                     rows="3"
                   />
                 </div>
               </div>
 
-              <div className="form-section">
-                <h3 className="form-section-title">Precio y Stock</h3>
-                <div className="form-row">
-                  <div className="form-group">
+              <div className="gestion-form-section">
+                <h3 className="gestion-form-section-title">Precio y Stock</h3>
+                <div className="gestion-form-row">
+                  <div className="gestion-form-group">
                     <label>Precio (S/) *</label>
-                    <div className="input-with-icon">
+                    <div className="gestion-input-with-icon">
                       <i className="fas fa-tag"></i>
                       <input
                         type="number"
@@ -639,9 +666,9 @@ const GestionProductos = ({ categoria }) => {
                     </div>
                   </div>
 
-                  <div className="form-group">
+                  <div className="gestion-form-group">
                     <label>Stock *</label>
-                    <div className="input-with-icon">
+                    <div className="gestion-input-with-icon">
                       <i className="fas fa-box"></i>
                       <input
                         type="number"
@@ -657,39 +684,41 @@ const GestionProductos = ({ categoria }) => {
                 </div>
               </div>
 
-              <div className="form-section">
-                <h3 className="form-section-title">Imagen del Producto</h3>
-                <div className="form-group">
+              <div className="gestion-form-section">
+                <h3 className="gestion-form-section-title">Imagen de la Joya</h3>
+                <div className="gestion-form-group">
                   <label>Imagen {!formData.imagenUrl && '*'}</label>
-                  <div className="file-upload-container">
+                  <div className="gestion-file-upload-container">
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="file-input"
-                      id="product-image-upload"
+                      className="gestion-file-input"
+                      id="gestion-product-image-upload"
+                      disabled={uploadingImage}
                     />
-                    <label htmlFor="product-image-upload" className="file-upload-label">
+                    <label htmlFor="gestion-product-image-upload" className="gestion-file-upload-label">
                       <i className="fas fa-upload"></i>
-                      Seleccionar imagen
+                      {uploadingImage ? 'Subiendo...' : 'Seleccionar imagen'}
                     </label>
-                    <span className="file-upload-info">Formatos: JPG, PNG, WEBP (Máx. 2MB)</span>
+                    <span className="gestion-file-upload-info">Formatos: JPG, PNG, WEBP (Máx. 2MB)</span>
                   </div>
                   
-                  <div className="image-preview">
+                  <div className="gestion-image-preview">
                     {imagenPreview ? (
                       <>
                         <img src={imagenPreview} alt="Vista previa" />
-                        <div className="image-preview-info">
+                        <div className="gestion-image-preview-info">
                           <p>Imagen seleccionada: {imagenFile?.name}</p>
                           <button 
                             type="button" 
-                            className="remove-image-btn"
+                            className="gestion-remove-image-btn"
                             onClick={() => {
                               setImagenPreview(null);
                               setImagenFile(null);
                               setFormData(prev => ({ ...prev, imagenUrl: '' }));
                             }}
+                            disabled={uploadingImage}
                           >
                             <i className="fas fa-times"></i> Cambiar imagen
                           </button>
@@ -700,15 +729,16 @@ const GestionProductos = ({ categoria }) => {
                         <img src={obtenerImagen(formData.imagenUrl)} alt="Vista previa" />
                         <button 
                           type="button" 
-                          className="remove-image-btn"
+                          className="gestion-remove-image-btn"
                           onClick={() => setFormData(prev => ({ ...prev, imagenUrl: '' }))}
+                          disabled={uploadingImage}
                         >
                           <i className="fas fa-times"></i> Eliminar imagen
                         </button>
                       </>
                     ) : (
-                      <div className="image-preview-placeholder">
-                        <i className="fas fa-image"></i>
+                      <div className="gestion-image-preview-placeholder">
+                        <i className="fas fa-gem"></i>
                         <p>Sin imagen seleccionada</p>
                         <span>La imagen se mostrará aquí</span>
                       </div>
@@ -717,15 +747,15 @@ const GestionProductos = ({ categoria }) => {
                 </div>
               </div>
 
-              <div className="form-section">
-                <h3 className="form-section-title">Colecciones</h3>
-                <div className="collections-section">
-                  <p>Selecciona las colecciones a las que pertenece este producto:</p>
-                  <div className="collections-grid">
+              <div className="gestion-form-section">
+                <h3 className="gestion-form-section-title">Colecciones</h3>
+                <div className="gestion-collections-section">
+                  <p>Selecciona las colecciones a las que pertenece esta joya:</p>
+                  <div className="gestion-collections-grid">
                     {collections.map(collection => (
                       <div
                         key={collection}
-                        className={`collection-item ${formData.colecciones.includes(collection) ? 'selected' : ''}`}
+                        className={`gestion-collection-item ${formData.colecciones.includes(collection) ? 'selected' : ''}`}
                         onClick={() => handleCollectionToggle(collection)}
                       >
                         {collection}
@@ -738,18 +768,19 @@ const GestionProductos = ({ categoria }) => {
                 </div>
               </div>
 
-              <div className="form-actions">
+              <div className="gestion-form-actions">
                 <button 
                   type="button" 
-                  className="cancel-btn"
+                  className="gestion-cancel-btn"
                   onClick={() => setIsManagementOpen(false)}
+                  disabled={uploadingImage}
                 >
                   <i className="fas fa-times"></i>
                   Cancelar
                 </button>
-                <button type="submit" className="submit-btn">
+                <button type="submit" className="gestion-submit-btn" disabled={uploadingImage}>
                   <i className="fas fa-save"></i>
-                  {isEditMode ? 'Actualizar Producto' : 'Crear Producto'}
+                  {uploadingImage ? 'Subiendo imagen...' : (isEditMode ? 'Actualizar Joya' : 'Crear Joya')}
                 </button>
               </div>
             </form>
