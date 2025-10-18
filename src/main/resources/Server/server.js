@@ -1,66 +1,741 @@
-// En tu server.js, REEMPLAZA la configuración de productStorage:
-const productStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const collectionType = req.body.collectionType || 'general';
-    let collectionDir;
-    
-    // Determinar la carpeta según el tipo de colección
-    if (collectionType === 'SeaCollection') {
-      collectionDir = path.join(__dirname, 'uploads', 'sea-collection');
-    } else if (collectionType === 'MataritaCollection') {
-      collectionDir = path.join(__dirname, 'uploads', 'matarita-collection');
-    } else if (collectionType === 'BestSellers') {
-      collectionDir = path.join(__dirname, 'uploads', 'best-sellers');
-    } else {
-      collectionDir = path.join(__dirname, 'uploads', 'categories');
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const cors = require('cors');
+const fs = require('fs');
+const app = express();
+
+// Middlewares PRIMERO
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos estáticos desde la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Función para mapear collectionType a nombre de carpeta
+const mapCollectionToFolder = (collectionType) => {
+    const mapping = {
+        'SeaCollection': 'sea-collection',
+        'MataritaCollection': 'matarita-collection', 
+        'BestSellers': 'best-sellers',
+        'seacollection': 'sea-collection',
+        'mataritacollection': 'matarita-collection',
+        'bestsellers': 'best-sellers'
+    };
+    return mapping[collectionType] || 'sea-collection';
+};
+
+// SOLUCIÓN: Configurar multer sin destination fija
+const upload = multer({ 
+    storage: multer.memoryStorage(), // Guardar en memoria primero
+    limits: {
+        fileSize: 10 * 1024 * 1024 // Límite de 10MB
     }
-    
-    // Crear carpeta si no existe
-    if (!fs.existsSync(collectionDir)) {
-      fs.mkdirSync(collectionDir, { recursive: true });
-      console.log('📁 Carpeta creada:', collectionDir);
-    }
-    
-    console.log('📂 Guardando imagen en:', collectionDir);
-    cb(null, collectionDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = `product-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
 });
 
-// Y MODIFICA la ruta de productos para que use la carpeta correcta:
-app.post('/api/upload-product-image', uploadProduct.single('productImage'), (req, res) => {
-  console.log('📸 Subiendo imagen de producto...');
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
+// Crear directorios necesarios al iniciar
+const directories = [
+    'uploads/categories', 
+    'uploads/sea-collection', 
+    'uploads/matarita-collection', 
+    'uploads/best-sellers',
+    'uploads/headers/sea-collection',
+    'uploads/headers/matarita-collection',
+    'uploads/headers/best-sellers',
+    'uploads/headers/general'
+];
+
+directories.forEach(dir => {
+    const fullPath = path.join(__dirname, dir);
+    if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
+        console.log('📂 Directorio creado:', fullPath);
     }
-    
-    const collectionType = req.body.collectionType || 'general';
-    let imageUrl;
-    
-    // Construir la URL según la colección
-    if (collectionType === 'SeaCollection') {
-      imageUrl = `http://localhost:${PORT}/uploads/sea-collection/${req.file.filename}`;
-    } else if (collectionType === 'MataritaCollection') {
-      imageUrl = `http://localhost:${PORT}/uploads/matarita-collection/${req.file.filename}`;
-    } else if (collectionType === 'BestSellers') {
-      imageUrl = `http://localhost:${PORT}/uploads/best-sellers/${req.file.filename}`;
-    } else {
-      imageUrl = `http://localhost:${PORT}/uploads/categories/${req.file.filename}`;
-    }
-    
-    console.log('✅ Imagen subida para colección:', collectionType);
-    res.json({ 
-      success: true, 
-      imageUrl: imageUrl, 
-      filename: req.file.filename,
-      collectionType: collectionType
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
 });
+
+// Log todas las peticiones
+app.use((req, res, next) => {
+    console.log(`📨 ${req.method} ${req.originalUrl}`);
+    next();
+});
+
+// Rutas para servir imágenes específicas
+app.get('/uploads/sea-collection/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', 'sea-collection', filename);
+    
+    console.log('🌊 Buscando imagen sea-collection:', filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log('❌ Imagen no encontrada en sea-collection:', filename);
+        res.status(404).json({ 
+            error: 'Imagen no encontrada en sea-collection',
+            filename: filename
+        });
+    }
+});
+
+app.get('/uploads/matarita-collection/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', 'matarita-collection', filename);
+    
+    console.log('🍹 Buscando imagen matarita-collection:', filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log('❌ Imagen no encontrada en matarita-collection:', filename);
+        res.status(404).json({ 
+            error: 'Imagen no encontrada en matarita-collection',
+            filename: filename
+        });
+    }
+});
+
+app.get('/uploads/best-sellers/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', 'best-sellers', filename);
+    
+    console.log('⭐ Buscando imagen best-sellers:', filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log('❌ Imagen no encontrada en best-sellers:', filename);
+        res.status(404).json({ 
+            error: 'Imagen no encontrada en best-sellers',
+            filename: filename
+        });
+    }
+});
+
+app.get('/uploads/categories/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'uploads', 'categories', filename);
+    
+    console.log('📂 Buscando imagen categories:', filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log('❌ Imagen no encontrada en categories:', filename);
+        res.status(404).json({ 
+            error: 'Imagen no encontrada en categories',
+            filename: filename
+        });
+    }
+});
+
+// Ruta para servir imágenes de header
+app.get('/uploads/headers/:collection/:filename', (req, res) => {
+    const { collection, filename } = req.params;
+    const filePath = path.join(__dirname, 'uploads', 'headers', collection, filename);
+    
+    console.log(`🖼️ Buscando imagen de header en ${collection}:`, filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log(`❌ Imagen de header no encontrada en ${collection}:`, filename);
+        res.status(404).json({ 
+            error: `Imagen de header no encontrada en ${collection}`,
+            collection: collection,
+            filename: filename
+        });
+    }
+});
+
+// Ruta genérica para cualquier imagen en uploads
+app.get('/uploads/:collection/:filename', (req, res) => {
+    const { collection, filename } = req.params;
+    
+    const collectionMapping = {
+        'seacollection': 'sea-collection',
+        'mataritacollection': 'matarita-collection',
+        'bestsellers': 'best-sellers'
+    };
+    
+    const actualCollection = collectionMapping[collection] || collection;
+    const filePath = path.join(__dirname, 'uploads', actualCollection, filename);
+    
+    console.log(`🖼️ Buscando imagen en ${actualCollection}:`, filename);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        console.log(`❌ Imagen no encontrada en ${actualCollection}:`, filename);
+        res.status(404).json({ 
+            error: `Imagen no encontrada en ${actualCollection}`,
+            collection: actualCollection,
+            filename: filename
+        });
+    }
+});
+
+// Ruta principal
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'Servidor funcionando correctamente',
+        endpoints: {
+            upload: 'POST /api/upload-product-image',
+            upload_header: 'POST /api/upload-header-image',
+            upload_sea_header: 'POST /api/upload-sea-collection-header-image',
+            upload_matarita_header: 'POST /api/upload-matarita-collection-header-image',
+            upload_bestsellers_header: 'POST /api/upload-best-sellers-header-image',
+            images: 'GET /uploads/:collection/:filename',
+            header_images: 'GET /uploads/headers/:collection/:filename',
+            sea_collection_header: 'GET /api/sea-collection-header-image',
+            matarita_collection_header: 'GET /api/matarita-collection-header-image',
+            best_sellers_header: 'GET /api/best-sellers-header-image',
+            files: 'GET /files'
+        }
+    });
+});
+
+// RUTA CORREGIDA - Manejo manual del archivo
+app.post('/api/upload-product-image', upload.single('productImage'), (req, res) => {
+    try {
+        console.log('📤 Upload recibido - Body:', req.body);
+        console.log('📤 File recibido:', req.file ? `Sí - ${req.file.originalname}` : 'No');
+
+        if (!req.file) {
+            console.log('❌ No se recibió archivo en la petición');
+            return res.status(400).json({ 
+                success: false,
+                error: 'No se subió ningún archivo' 
+            });
+        }
+
+        // Obtener collectionType del body (ahora debería estar disponible)
+        let collection = 'sea-collection';
+        if (req.body.collectionType) {
+            collection = mapCollectionToFolder(req.body.collectionType);
+            console.log('✅ CollectionType del body:', req.body.collectionType, '→', collection);
+        } else {
+            console.log('⚠️ No se encontró collectionType, usando por defecto:', collection);
+        }
+
+        // Crear directorio si no existe
+        const uploadPath = path.join(__dirname, 'uploads', collection);
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+            console.log('✅ Directorio creado:', uploadPath);
+        }
+
+        // Generar nombre único para el archivo
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = 'product-' + uniqueSuffix + path.extname(req.file.originalname);
+        const filePath = path.join(uploadPath, filename);
+
+        console.log('💾 Guardando archivo en:', filePath);
+
+        // Guardar el archivo manualmente
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Verificar que el archivo se guardó correctamente
+        if (!fs.existsSync(filePath)) {
+            console.log('❌ Error: El archivo no se guardó');
+            return res.status(500).json({
+                success: false,
+                error: 'Error al guardar el archivo en el servidor'
+            });
+        }
+
+        const imageUrl = `http://localhost:5000/uploads/${collection}/${filename}`;
+        const imagePath = `/uploads/${collection}/${filename}`;
+
+        console.log('✅ Archivo subido exitosamente:', {
+            filename: filename,
+            collectionTypeFromFrontend: req.body.collectionType,
+            finalCollectionFolder: collection,
+            imageUrl: imageUrl,
+            path: imagePath,
+            fullPath: filePath
+        });
+
+        res.json({
+            success: true,
+            message: 'Archivo subido exitosamente',
+            filename: filename,
+            collection: collection,
+            imageUrl: imageUrl,
+            path: imagePath,
+            fullPath: filePath
+        });
+
+    } catch (error) {
+        console.error('❌ Error al subir archivo:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error interno del servidor al subir archivo: ' + error.message 
+        });
+    }
+});
+
+// RUTAS CORREGIDAS PARA HEADER IMAGES - BUSCAN IMÁGENES REALES
+app.get('/api/sea-collection-header-image', (req, res) => {
+    const headerPath = path.join(__dirname, 'uploads', 'headers', 'sea-collection');
+    
+    if (!fs.existsSync(headerPath)) {
+        return res.status(404).json({
+            success: false,
+            error: 'Directorio de headers no encontrado'
+        });
+    }
+
+    // Buscar archivos de imagen en el directorio
+    const files = fs.readdirSync(headerPath)
+        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+        .sort((a, b) => {
+            // Ordenar por fecha de modificación (más reciente primero)
+            const statA = fs.statSync(path.join(headerPath, a));
+            const statB = fs.statSync(path.join(headerPath, b));
+            return statB.mtime.getTime() - statA.mtime.getTime();
+        });
+
+    if (files.length === 0) {
+        return res.status(404).json({
+            success: false,
+            error: 'No hay imágenes de header para Sea Collection',
+            imageUrl: null
+        });
+    }
+
+    // Tomar la imagen más reciente
+    const latestImage = files[0];
+    const imageUrl = `http://localhost:5000/uploads/headers/sea-collection/${latestImage}`;
+
+    console.log('🌊 Header image encontrada para Sea Collection:', latestImage);
+
+    res.json({
+        success: true,
+        imageUrl: imageUrl,
+        filename: latestImage,
+        message: 'Imagen de header para Sea Collection'
+    });
+});
+
+app.get('/api/matarita-collection-header-image', (req, res) => {
+    const headerPath = path.join(__dirname, 'uploads', 'headers', 'matarita-collection');
+    
+    if (!fs.existsSync(headerPath)) {
+        return res.status(404).json({
+            success: false,
+            error: 'Directorio de headers no encontrado'
+        });
+    }
+
+    // Buscar archivos de imagen en el directorio
+    const files = fs.readdirSync(headerPath)
+        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+        .sort((a, b) => {
+            // Ordenar por fecha de modificación (más reciente primero)
+            const statA = fs.statSync(path.join(headerPath, a));
+            const statB = fs.statSync(path.join(headerPath, b));
+            return statB.mtime.getTime() - statA.mtime.getTime();
+        });
+
+    if (files.length === 0) {
+        return res.status(404).json({
+            success: false,
+            error: 'No hay imágenes de header para Matarita Collection',
+            imageUrl: null
+        });
+    }
+
+    // Tomar la imagen más reciente
+    const latestImage = files[0];
+    const imageUrl = `http://localhost:5000/uploads/headers/matarita-collection/${latestImage}`;
+
+    console.log('🍹 Header image encontrada para Matarita Collection:', latestImage);
+
+    res.json({
+        success: true,
+        imageUrl: imageUrl,
+        filename: latestImage,
+        message: 'Imagen de header para Matarita Collection'
+    });
+});
+
+app.get('/api/best-sellers-header-image', (req, res) => {
+    const headerPath = path.join(__dirname, 'uploads', 'headers', 'best-sellers');
+    
+    if (!fs.existsSync(headerPath)) {
+        return res.status(404).json({
+            success: false,
+            error: 'Directorio de headers no encontrado'
+        });
+    }
+
+    // Buscar archivos de imagen en el directorio
+    const files = fs.readdirSync(headerPath)
+        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+        .sort((a, b) => {
+            // Ordenar por fecha de modificación (más reciente primero)
+            const statA = fs.statSync(path.join(headerPath, a));
+            const statB = fs.statSync(path.join(headerPath, b));
+            return statB.mtime.getTime() - statA.mtime.getTime();
+        });
+
+    if (files.length === 0) {
+        return res.status(404).json({
+            success: false,
+            error: 'No hay imágenes de header para Best Sellers',
+            imageUrl: null
+        });
+    }
+
+    // Tomar la imagen más reciente
+    const latestImage = files[0];
+    const imageUrl = `http://localhost:5000/uploads/headers/best-sellers/${latestImage}`;
+
+    console.log('⭐ Header image encontrada para Best Sellers:', latestImage);
+
+    res.json({
+        success: true,
+        imageUrl: imageUrl,
+        filename: latestImage,
+        message: 'Imagen de header para Best Sellers'
+    });
+});
+
+// Rutas alternativas que el frontend está intentando usar
+app.get('/api/matarita-header-image', (req, res) => {
+    // Redirigir a la ruta correcta
+    const headerPath = path.join(__dirname, 'uploads', 'headers', 'matarita-collection');
+    
+    if (!fs.existsSync(headerPath)) {
+        return res.status(404).json({
+            success: false,
+            error: 'Directorio de headers no encontrado'
+        });
+    }
+
+    const files = fs.readdirSync(headerPath)
+        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+        .sort((a, b) => {
+            const statA = fs.statSync(path.join(headerPath, a));
+            const statB = fs.statSync(path.join(headerPath, b));
+            return statB.mtime.getTime() - statA.mtime.getTime();
+        });
+
+    if (files.length === 0) {
+        return res.status(404).json({
+            success: false,
+            error: 'No hay imágenes de header para Matarita Collection',
+            imageUrl: null
+        });
+    }
+
+    const latestImage = files[0];
+    const imageUrl = `http://localhost:5000/uploads/headers/matarita-collection/${latestImage}`;
+
+    res.json({
+        success: true,
+        imageUrl: imageUrl,
+        filename: latestImage,
+        message: 'Imagen de header para Matarita Collection'
+    });
+});
+
+// Ruta para subir imágenes de header (genérica)
+app.post('/api/upload-header-image', upload.single('headerImage'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false,
+                error: 'No se subió ningún archivo' 
+            });
+        }
+
+        const collectionType = req.body.collectionType || 'general';
+        const collection = mapCollectionToFolder(collectionType);
+        
+        const uploadPath = path.join(__dirname, 'uploads', 'headers', collection);
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = 'header-' + uniqueSuffix + path.extname(req.file.originalname);
+        const filePath = path.join(uploadPath, filename);
+
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        const imageUrl = `http://localhost:5000/uploads/headers/${collection}/${filename}`;
+
+        res.json({
+            success: true,
+            message: 'Imagen de header subida exitosamente',
+            imageUrl: imageUrl,
+            filename: filename,
+            collection: collection
+        });
+
+    } catch (error) {
+        console.error('❌ Error al subir imagen de header:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error al subir imagen de header' 
+        });
+    }
+});
+
+// Función helper MEJORADA para subir imágenes de header
+function uploadHeaderImage(req, res, collectionType) {
+    try {
+        console.log(`📤 Subiendo header image para ${collectionType}:`, req.file ? `Sí - ${req.file.originalname}` : 'No');
+
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false,
+                error: 'No se subió ningún archivo' 
+            });
+        }
+
+        const collection = mapCollectionToFolder(collectionType);
+        
+        const uploadPath = path.join(__dirname, 'uploads', 'headers', collection);
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+
+        // Limpiar imágenes antiguas (opcional - mantener solo las 5 más recientes)
+        const existingFiles = fs.readdirSync(uploadPath)
+            .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+            .map(file => {
+                const filePath = path.join(uploadPath, file);
+                return {
+                    name: file,
+                    path: filePath,
+                    time: fs.statSync(filePath).mtime.getTime()
+                };
+            })
+            .sort((a, b) => b.time - a.time);
+
+        // Mantener solo las 5 imágenes más recientes
+        if (existingFiles.length >= 5) {
+            const filesToDelete = existingFiles.slice(4);
+            filesToDelete.forEach(file => {
+                fs.unlinkSync(file.path);
+                console.log(`🗑️ Imagen antigua eliminada: ${file.name}`);
+            });
+        }
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = 'header-' + uniqueSuffix + path.extname(req.file.originalname);
+        const filePath = path.join(uploadPath, filename);
+
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        const imageUrl = `http://localhost:5000/uploads/headers/${collection}/${filename}`;
+
+        console.log(`✅ Header image subida exitosamente para ${collectionType}:`, imageUrl);
+
+        res.json({
+            success: true,
+            message: `Imagen de header para ${collectionType} subida exitosamente`,
+            imageUrl: imageUrl,
+            filename: filename,
+            collection: collection
+        });
+
+    } catch (error) {
+        console.error(`❌ Error al subir header image para ${collectionType}:`, error);
+        res.status(500).json({ 
+            success: false,
+            error: `Error al subir imagen de header: ${error.message}` 
+        });
+    }
+}
+
+// Rutas específicas para subir headers de cada colección
+app.post('/api/upload-sea-collection-header-image', upload.single('headerImage'), (req, res) => {
+    uploadHeaderImage(req, res, 'SeaCollection');
+});
+
+app.post('/api/upload-matarita-collection-header-image', upload.single('headerImage'), (req, res) => {
+    uploadHeaderImage(req, res, 'MataritaCollection');
+});
+
+app.post('/api/upload-best-sellers-header-image', upload.single('headerImage'), (req, res) => {
+    uploadHeaderImage(req, res, 'BestSellers');
+});
+
+// Ruta para obtener información de archivos
+app.get('/files', (req, res) => {
+    try {
+        const collections = ['categories', 'sea-collection', 'matarita-collection', 'best-sellers'];
+        const filesInfo = {};
+
+        collections.forEach(collection => {
+            const collectionPath = path.join(__dirname, 'uploads', collection);
+            if (fs.existsSync(collectionPath)) {
+                const files = fs.readdirSync(collectionPath);
+                filesInfo[collection] = files.map(file => {
+                    const filePath = path.join(collectionPath, file);
+                    const stats = fs.statSync(filePath);
+                    return {
+                        filename: file,
+                        url: `http://localhost:5000/uploads/${collection}/${file}`,
+                        imageUrl: `http://localhost:5000/uploads/${collection}/${file}`,
+                        path: `/uploads/${collection}/${file}`,
+                        size: stats.size,
+                        created: stats.birthtime
+                    };
+                });
+            }
+        });
+
+        console.log('📋 Archivos encontrados:', filesInfo);
+        res.json(filesInfo);
+    } catch (error) {
+        console.error('Error al leer archivos:', error);
+        res.status(500).json({ error: 'Error al leer archivos' });
+    }
+});
+
+// Ruta para verificar que una imagen existe
+app.get('/check-image/:collection/:filename', (req, res) => {
+    const { collection, filename } = req.params;
+    
+    const collectionMapping = {
+        'seacollection': 'sea-collection',
+        'mataritacollection': 'matarita-collection',
+        'bestsellers': 'best-sellers'
+    };
+    
+    const actualCollection = collectionMapping[collection] || collection;
+    const filePath = path.join(__dirname, 'uploads', actualCollection, filename);
+    
+    if (fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath);
+        res.json({ 
+            exists: true,
+            url: `http://localhost:5000/uploads/${actualCollection}/${filename}`,
+            imageUrl: `http://localhost:5000/uploads/${actualCollection}/${filename}`,
+            size: stats.size,
+            created: stats.birthtime
+        });
+    } else {
+        res.status(404).json({ 
+            exists: false,
+            error: 'Imagen no encontrada' 
+        });
+    }
+});
+
+// Ruta para eliminar una imagen
+app.delete('/delete-image/:collection/:filename', (req, res) => {
+    const { collection, filename } = req.params;
+    
+    const collectionMapping = {
+        'seacollection': 'sea-collection',
+        'mataritacollection': 'matarita-collection',
+        'bestsellers': 'best-sellers'
+    };
+    
+    const actualCollection = collectionMapping[collection] || collection;
+    const filePath = path.join(__dirname, 'uploads', actualCollection, filename);
+    
+    if (fs.existsSync(filePath)) {
+        try {
+            fs.unlinkSync(filePath);
+            console.log('🗑️ Imagen eliminada:', filePath);
+            res.json({ 
+                success: true,
+                message: 'Imagen eliminada exitosamente'
+            });
+        } catch (error) {
+            console.error('❌ Error eliminando imagen:', error);
+            res.status(500).json({ 
+                success: false,
+                error: 'Error eliminando imagen' 
+            });
+        }
+    } else {
+        res.status(404).json({ 
+            success: false,
+            error: 'Imagen no encontrada' 
+        });
+    }
+});
+
+// Manejo de errores
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        console.error('❌ Error de Multer:', error.code);
+        
+        if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+            return res.status(400).json({ 
+                success: false,
+                error: `Campo de archivo incorrecto. Se esperaba: productImage` 
+            });
+        }
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ 
+                success: false,
+                error: 'El archivo es demasiado grande. Límite: 10MB' 
+            });
+        }
+    }
+    console.error('❌ Error general:', error);
+    res.status(500).json({ 
+        success: false,
+        error: 'Error interno del servidor: ' + error.message 
+    });
+});
+
+// Manejo de rutas no encontradas
+app.use('*', (req, res) => {
+    console.log(`❌ Ruta no encontrada: ${req.method} ${req.originalUrl}`);
+    res.status(404).json({ 
+        success: false,
+        error: 'Ruta no encontrada',
+        method: req.method,
+        path: req.originalUrl
+    });
+});
+
+// Iniciar servidor en puerto 5000
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log('=================================');
+    console.log(`🚀 Servidor ejecutándose en http://localhost:5000`);
+    console.log('=================================');
+    console.log('📁 Directorios creados:');
+    console.log('   - uploads/categories/');
+    console.log('   - uploads/sea-collection/');
+    console.log('   - uploads/matarita-collection/');
+    console.log('   - uploads/best-sellers/');
+    console.log('   - uploads/headers/sea-collection/');
+    console.log('   - uploads/headers/matarita-collection/');
+    console.log('   - uploads/headers/best-sellers/');
+    console.log('   - uploads/headers/general/');
+    console.log('=================================');
+    console.log('🔄 Mapeo de colecciones:');
+    console.log('   SeaCollection → sea-collection');
+    console.log('   MataritaCollection → matarita-collection');
+    console.log('   BestSellers → best-sellers');
+    console.log('=================================');
+    console.log('📤 Endpoints disponibles:');
+    console.log('   POST /api/upload-product-image - Subir imágenes de productos');
+    console.log('   POST /api/upload-header-image - Subir imágenes de header genéricas');
+    console.log('   POST /api/upload-sea-collection-header-image - Subir header Sea Collection');
+    console.log('   POST /api/upload-matarita-collection-header-image - Subir header Matarita Collection');
+    console.log('   POST /api/upload-best-sellers-header-image - Subir header Best Sellers');
+    console.log('   GET  /api/sea-collection-header-image - Obtener header Sea Collection');
+    console.log('   GET  /api/matarita-collection-header-image - Obtener header Matarita Collection');
+    console.log('   GET  /api/best-sellers-header-image - Obtener header Best Sellers');
+    console.log('   GET  /api/matarita-header-image - Ruta alternativa Matarita Collection');
+    console.log('   GET  /files - Listar archivos');
+    console.log('=================================');
+});
+
+module.exports = app;

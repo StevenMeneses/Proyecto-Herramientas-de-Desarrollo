@@ -203,5 +203,3 @@ function ShopPanel({ isOpen, onClose }) {
 }
 
 export default ShopPanel;
-
-

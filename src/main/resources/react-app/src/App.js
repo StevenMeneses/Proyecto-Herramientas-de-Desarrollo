@@ -34,22 +34,22 @@ import { FavoritesProvider, getFavoritesCountFromStorage } from './context/Favor
 // Importar componentes de paneles
 import CartPanel from './components/CartPanel';
 import FavoritesPanel from './components/FavoritesPanel';
+import Header from './components/Header';
+
 
 function App() {
   
   const [usuario, setUsuario] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-  const [badgeUpdate, setBadgeUpdate] = useState(0);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [userRole, setUserRole] = useState(0);
 
 
   // ESTADO PARA NEW COLLECTION
-  const [newCollectionData, setNewCollectionData] = useState({
+  const [setNewCollectionData] = useState({
     title: "NEW COLLECTION",
     subtitle: "Lovelay with a sad soul. Art you carry with you.",
     buttonText: "Buy now",
@@ -244,30 +244,6 @@ const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
 };
 
 
-  // FUNCIONES PARA NEW COLLECTION
-  const handleNewCollectionImageChange = (imageId, event) => {
-    if (userRole !== 1) return;
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const updatedImages = newCollectionData.images.map(img => 
-          img.id === imageId ? { ...img, url: e.target.result } : img
-        );
-        const newData = { ...newCollectionData, images: updatedImages };
-        setNewCollectionData(newData);
-        localStorage.setItem("newCollectionData", JSON.stringify(newData));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleNewCollectionTextChange = (field, value) => {
-    if (userRole !== 1) return;
-    const newData = { ...newCollectionData, [field]: value };
-    setNewCollectionData(newData);
-    localStorage.setItem("newCollectionData", JSON.stringify(newData));
-  };
 
   // FUNCIONES PARA MARLY COLLECTIONS
   const handleMarlyCollectionImageChange = (collectionType, imageId, event) => {
@@ -311,19 +287,7 @@ const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
     }
   };
 
-  const handleMeetTheMakerTextChange = (field, value) => {
-    if (userRole !== 1) return;
-    const newData = { ...meetTheMakerData, [field]: value };
-    setMeetTheMakerData(newData);
-    localStorage.setItem("meetTheMakerData", JSON.stringify(newData));
-  };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/buscar?q=${encodeURIComponent(searchQuery)}`;
-    }
-  };
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -863,117 +827,19 @@ const MarlyCollectionsSection = () => {
     </footer>
   );
 
-  return (
+ return (
     <CartProvider>
       <FavoritesProvider>
         <Router>
           <div className="app-container">
-            {/* Header Superior con Iconos */}
-            <header className="top-header">
-              <div className="header-container">
-                <div className="left-section">
-                  <nav className="nav-menu">
-                    <div className="nav-item">
-                      <button className="nav-link" onClick={() => {
-                        setIsShopOpen(!isShopOpen);
-                        setIsCollectionsOpen(false);
-                      }}>
-                        Shop
-                      </button>
-                      <ShopPanel 
-                        isOpen={isShopOpen} 
-                        onClose={() => setIsShopOpen(false)}
-                        userRole={userRole}
-                      />
-                    </div>
-                    
-                    <div className="nav-item">
-                      <button className="nav-link" onClick={() => {
-                        setIsCollectionsOpen(!isCollectionsOpen);
-                        setIsShopOpen(false);
-                      }}>
-                        Collections
-                      </button>
-                      <CollectionsPanel 
-                        isOpen={isCollectionsOpen} 
-                        onClose={() => setIsCollectionsOpen(false)} 
-                      />
-                    </div>
-                    
-                    <Link to="/nuestro-trabajo" className="nav-link">Our Story</Link>
-                  </nav>
-                </div>
-                
-                <div className="center-section">
-  <button 
-    className="store-title-button"
-    onClick={() => window.location.href = 'http://localhost:3000/'}
-    style={{
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      padding: '0',
-      font: 'inherit',
-      color: 'inherit'
-    }}
-  >
-    <h1 className="store-title">Marly Handmade</h1>
-  </button>
-</div>
-                
-                <div className="right-section">
-                  <button className="icon-link" title="Favoritos" onClick={() => setIsFavoritesOpen(true)}>
-                    <i className="fa-regular fa-heart"></i>
-                    <span className="icon-badge">{getFavoritesCountFromStorage()}</span>
-                  </button>
-
-                  <button className="icon-link" title="Carrito" onClick={() => setIsCartOpen(true)}>
-                    <i className="fas fa-shopping-cart"></i>
-                    <span className="icon-badge">{getCartCountFromStorage()}</span>
-                  </button>
-                  
-                  <div className="user-dropdown">
-                    <button className="user-btn">
-                      <i className="fa-regular fa-user"></i>
-                      {usuario && (
-                        <span className="user-name">
-                          {usuario.nombre} {usuario.apellido}
-                        </span>
-                      )}
-                      <i className="fas fa-chevron-down"></i>
-                    </button>
-                    
-                    <div className="dropdown-menu">
-                      <Link to="/perfil" className="dropdown-item">
-                        <i className="fas fa-user"></i>
-                        Mi Perfil {usuario && `(${usuario.nombre})`}
-                      </Link>
-
-                      {(usuario?.idRol === 1 || usuario?.idRol === 2) && (
-                        <Link to="/gestion-ventas" className="dropdown-item">
-                          <i className="fas fa-store"></i>
-                          Gestión de Ventas
-                        </Link>
-                      )}
-                      
-                      <Link to="/pedidos" className="dropdown-item">
-                        <i className="fas fa-shopping-bag"></i>
-                        Mis Pedidos
-                      </Link>
-                      <Link to="/configuracion" className="dropdown-item">
-                        <i className="fas fa-cog"></i>
-                        Configuración
-                      </Link>
-                      <hr className="dropdown-divider" />
-                      <Link to="/logout" className="dropdown-item logout-item" onClick={handleLogout}>
-                        <i className="fas fa-sign-out-alt"></i>
-                        Cerrar Sesión
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </header>
+            {/* Header importado como componente independiente */}
+            <Header 
+              usuario={usuario}
+              userRole={userRole}
+              onLogout={handleLogout}
+              onCartOpen={() => setIsCartOpen(true)}
+              onFavoritesOpen={() => setIsFavoritesOpen(true)}
+            />
 
             {/* Contenido Principal */}
             <main className="main-content">
@@ -1054,6 +920,7 @@ const MarlyCollectionsSection = () => {
                 } />
 
                 {/* Resto de tus rutas... */}
+                
                 <Route path="/anillos" element={<Anillos />} />
                 <Route path="/aretes" element={<Aretes />} />
                 <Route path="/brazaletes" element={<Brazaletes />} />

@@ -1,26 +1,17 @@
 @import "tailwindcss";
 
-/* Panel dropdown más ancho, hasta "Ana Garcia" */
+/* Panel dropdown más ancho */
 .shop-panel-dropdown {
     position: absolute;
     top: 100%;
-    left: 1;
-    width: 1100px; /* Más ancho */
+    left: 560px;
+    width: 1100px;
     background: white;
     border: 1px solid #e1e5e9;
     border-radius: 12px;
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    margin-top: 0   px;
-    opacity: 0;
-    transform: translateY(-12px);
-    visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 300px; /* Altura fija */
-    overflow: hidden;
-}
-
-.shop-panel-dropdown.active {
+    margin-top: 1px;
     opacity: 1;
     transform: translateY(0);
     visibility: visible;
@@ -53,7 +44,7 @@
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    border-bottom: 0px solid;
+    border-bottom: 1px solid #e1e5e9;
     min-height: 60px;
     display: flex;
     align-items: center;
@@ -88,7 +79,7 @@
     padding: 15px 0;
     display: flex;
     flex-direction: column;
-    justify-content: auto;
+    justify-content: flex-start;
 }
 
 .panel-btn {
@@ -98,11 +89,11 @@
     text-align: left;
     background: none;
     border: none;
-    font-size: 10px;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
-    margin: 2px 5;
+    margin: 2px 0;
     font-family: 'Arial', sans-serif;
     letter-spacing: 0.3px;
 }
@@ -172,9 +163,11 @@
     margin-top: 40px;
     margin-left: 15px;
     justify-content: center;
-    
+    align-items: center;
     transition: all 0.3s ease;
     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    position: relative;
+    overflow: hidden;
 }
 
 .marly-image-square:hover {
@@ -191,7 +184,7 @@
 }
 
 .image-overlay {
-    position: relative;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -205,65 +198,18 @@
     transition: opacity 0.3s ease;
 }
 
-.marly-image-section:hover .image-overlay {
+.marly-image-container:hover .image-overlay {
     opacity: 1;
 }
 
 .camera-icon {
-    font-size: 20px;
+    font-size: 14px;
     color: white;
+    font-weight: 600;
 }
 
 .image-upload-input {
     display: none;
-}
-
-.marly-info {
-    text-align: center;
-}
-
-.marly-title {
-    font-weight: 700;
-    color: #1e3a8a;
-    margin-bottom: 12px;
-    font-size: 16px;
-    letter-spacing: 0.5px;
-}
-
-.collection-btn {
-    display: block;
-    width: 100%;
-    padding: 10px 15px;
-    margin: 6px 0;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    letter-spacing: 0.5px;
-}
-
-.sea-collection {
-    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-    color: #0369a1;
-    border: 2px solid #7dd3fc;
-}
-.sea-collection:hover {
-    background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(3, 105, 161, 0.3);
-}
-
-.matarita-collection {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    color: #dc2626;
-    border: 2px solid #fca5a5;
-}
-.matarita-collection:hover {
-    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 /* Responsive */
@@ -271,9 +217,6 @@
     .shop-panel-dropdown {
         width: 95vw;
         left: 50%;
-        transform: translateX(-50%) translateY(-12px);
-    }
-    .shop-panel-dropdown.active {
         transform: translateX(-50%) translateY(0);
     }
 }
@@ -293,4 +236,21 @@
     .shop-panel-dropdown {
         max-height: 500px;
     }
+    
+    .marly-image-square {
+        width: 180px;
+        height: 180px;
+        margin: 20px auto;
+    }
+}
+
+/* Estilos para los botones en mobile */
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.text-\[\#2C3E5E\] button:hover {
+    color: #040F2E;
 }

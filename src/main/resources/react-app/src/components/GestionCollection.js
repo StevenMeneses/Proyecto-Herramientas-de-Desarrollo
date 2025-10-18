@@ -1,4 +1,3 @@
-// src/components/GestionCollection.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './GestionProductos.css';
@@ -48,6 +47,16 @@ const GestionCollection = () => {
     }
   };
 
+  // Función para mapear tipo a nombre de carpeta
+  const mapTipoToFolderName = (tipo) => {
+    const mapping = {
+      'SeaCollection': 'sea-collection',
+      'MataritaCollection': 'matarita-collection',
+      'BestSellers': 'best-sellers'
+    };
+    return mapping[tipo] || 'sea-collection';
+  };
+
   const tiposProducto = ['SeaCollection', 'MataritaCollection', 'BestSellers'];
 
   // ESTADO DEL FORMULARIO ACTUALIZADO CON NUEVOS CAMPOS
@@ -88,7 +97,11 @@ const GestionCollection = () => {
       formData.append('productImage', file);
       formData.append('collectionType', tipo);
 
-      console.log('📤 Subiendo imagen al backend...', { tipo });
+      console.log('📤 Subiendo imagen al backend...', { 
+        tipo, 
+        folder: mapTipoToFolderName(tipo),
+        file: file.name 
+      });
 
       const response = await fetch('http://localhost:5000/api/upload-product-image', {
         method: 'POST',
@@ -102,7 +115,12 @@ const GestionCollection = () => {
 
       const result = await response.json();
       console.log('✅ Imagen subida exitosamente:', result);
-      return result.imageUrl;
+      
+      if (result.success && result.imageUrl) {
+        return result.imageUrl;
+      } else {
+        throw new Error('El servidor no devolvió la URL de la imagen');
+      }
 
     } catch (error) {
       console.error('❌ Error subiendo imagen:', error);
@@ -110,7 +128,7 @@ const GestionCollection = () => {
     }
   }, []);
 
-  // Función para obtener imagen - USA URLS DEL BACKEND
+  // Función para obtener imagen - MEJORADA
   const obtenerImagen = useCallback((imagePath, tipo) => {
     if (!imagePath) return '/images/placeholder-product.jpg';
     
@@ -119,10 +137,15 @@ const GestionCollection = () => {
       return imagePath;
     }
     
-    // Si es un nombre de archivo, intentar construir la URL según el tipo
-    if (imagePath && !imagePath.startsWith('http')) {
-      // Para imágenes existentes que aún no están en el backend
-      return '/images/placeholder-product.jpg';
+    // Si es solo el path (ej: /uploads/sea-collection/filename.png)
+    if (imagePath.startsWith('/uploads/')) {
+      return `http://localhost:5000${imagePath}`;
+    }
+    
+    // Si es solo el nombre del archivo, construir la URL con el mapeo correcto
+    if (imagePath && !imagePath.startsWith('http') && !imagePath.startsWith('/')) {
+      const folderName = mapTipoToFolderName(tipo);
+      return `http://localhost:5000/uploads/${folderName}/${imagePath}`;
     }
     
     return '/images/placeholder-product.jpg';
@@ -412,10 +435,20 @@ const GestionCollection = () => {
         setUploadingImage(true);
         console.log('🔄 Subiendo nueva imagen al backend...');
         
-        // Subir al backend
-        imagenUrlFinal = await subirImagenAlBackend(imagenFile, formData.tipo);
-        console.log('✅ Imagen subida, URL:', imagenUrlFinal);
-        setUploadingImage(false);
+        try {
+          // Subir al backend
+          const imagenUrlBackend = await subirImagenAlBackend(imagenFile, formData.tipo);
+          imagenUrlFinal = imagenUrlBackend;
+          console.log('✅ Imagen subida, URL final:', imagenUrlFinal);
+        } catch (uploadError) {
+          console.error('❌ Error en subida de imagen:', uploadError);
+          throw new Error(`No se pudo subir la imagen: ${uploadError.message}`);
+        } finally {
+          setUploadingImage(false);
+        }
+      } else if (!imagenUrlFinal) {
+        alert('Por favor selecciona una imagen para el producto');
+        return;
       }
 
       // Preparar datos del producto con la URL del backend
@@ -425,6 +458,11 @@ const GestionCollection = () => {
         precio: parseFloat(formData.precio),
         stock: parseInt(formData.stock)
       };
+
+      console.log('💾 Guardando producto:', {
+        ...productData,
+        folder: mapTipoToFolderName(formData.tipo)
+      });
 
       if (isEditMode) {
         // MODO EDICIÓN
@@ -793,7 +831,7 @@ const GestionCollection = () => {
                       <br />
                       <small>Tamaño: {(imagenFile.size / 1024 / 1024).toFixed(2)} MB</small>
                       <br />
-                      <small style={{color: 'green'}}>✅ Esta imagen se guardará en: uploads/{formData.tipo.toLowerCase()}/</small>
+                      <small style={{color: 'green'}}>✅ Esta imagen se guardará en: uploads/{mapTipoToFolderName(formData.tipo)}/</small>
                     </div>
                   )}
                   
@@ -843,13 +881,14 @@ const GestionCollection = () => {
                   }}>
                     Formatos aceptados: JPG, PNG, WEBP. Tamaño máximo: 5MB
                     <br />
-                    <strong>✅ Las imágenes se guardan en: uploads/{formData.tipo.toLowerCase()}/</strong>
+                    <strong>✅ Las imágenes se guardan en: uploads/{mapTipoToFolderName(formData.tipo)}/</strong>
                   </p>
                 </div>
               </div>
 
               <div className="form-info">
                 <p><strong>Colección seleccionada:</strong> {currentConfig.name}</p>
+                <p><strong>Carpeta de destino:</strong> uploads/{mapTipoToFolderName(formData.tipo)}/</p>
                 {isEditMode && editingProductOriginalTipo && editingProductOriginalTipo !== formData.tipo && (
                   <p style={{color: 'orange'}}>
                     <strong>⚠️ Atención:</strong> El producto se moverá de {getConfigByTipo(editingProductOriginalTipo).name} a {currentConfig.name}
