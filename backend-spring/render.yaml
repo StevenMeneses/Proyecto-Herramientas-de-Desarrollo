@@ -1,0 +1,10 @@
+# render.yaml
+services:
+  - type: web
+    name: backend-spring
+    env: docker
+    docker:
+      dockerfile: Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
