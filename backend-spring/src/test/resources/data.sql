@@ -1,0 +1,4 @@
+-- Insert test data
+INSERT INTO usuario (nombre, apellido, dni, email, correo, contrasena, telefono, direccion, idRol, activo, id_rol) VALUES ('Test', 'Admin', '12345678', 'admin@test.com', 'admin@test.com', '$2a$10$dummy.hash.for.testing.purposes', '123456789', 'Test Address', 1, true, 0);
+INSERT INTO usuario (nombre, apellido, dni, email, correo, contrasena, telefono, direccion, idRol, activo, id_rol) VALUES ('Test', 'Seller', '87654321', 'seller@test.com', 'seller@test.com', '$2a$10$dummy.hash.for.testing.purposes', '987654321', 'Test Address', 2, true, 0);
+INSERT INTO usuario (nombre, apellido, dni, email, correo, contrasena, telefono, direccion, idRol, activo, id_rol) VALUES ('Test', 'Client', '11223344', 'client@test.com', 'client@test.com', '$2a$10$dummy.hash.for.testing.purposes', '555666777', 'Test Address', 3, true, 0);

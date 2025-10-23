@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Spring Security CORS</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin: 15px 0; padding: 15px; border: 1px solid #ddd; }
+        input { width: 100%; padding: 8px; margin: 5px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+        .result { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Spring Security + CORS para React</h1>
+        
+        <div class="form-group">
+            <h3>🔑 Login con Spring Security</h3>
+            <p><strong>Método:</strong> Form POST a /login (Spring Security estándar)</p>
+            <input type="email" id="email" placeholder="Email" value="jalefmat99@gmail.com">
+            <input type="password" id="password" placeholder="Contraseña" value="123456">
+            <button onclick="springSecurityLogin()">🚪 Login via Spring Security</button>
+            <button onclick="loginForReact()">🎯 Login para React (con parámetro)</button>
+        </div>
+
+        <div class="form-group">
+            <h3>🔍 Verificaciones de Estado</h3>
+            <button onclick="checkLoginStatus()">📊 Check Login Status</button>
+            <button onclick="testUserAPI()">👤 Test /api/usuario/datos</button>
+            <button onclick="checkAuthAPI()">🔐 Test /api/auth/check</button>
+        </div>
+
+        <div class="form-group">
+            <h3>🌐 Test CORS desde "React" (puerto 3000)</h3>
+            <button onclick="simulateReactLogin()">⚛️ Simular Login desde React</button>
+            <button onclick="simulateReactAPI()">🔗 Simular API call desde React</button>
+        </div>
+
+        <div id="result" class="result info">
+            <strong>Estado:</strong> Listo para probar
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const result = document.getElementById('result');
+            result.className = 'result ' + type;
+            result.innerHTML = '<pre>' + JSON.stringify(message, null, 2) + '</pre>';
+            console.log(message);
+        }
+
+        // LOGIN CON SPRING SECURITY ESTÁNDAR
+        async function springSecurityLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log('🔄 Enviando login a Spring Security /login...', 'info');
+                
+                // Crear FormData para simular form HTML
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('contrasena', password);
+                
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include', // Para cookies de sesión
+                    redirect: 'follow' // Seguir redirecciones
+                });
+                
+                log({
+                    message: 'Login procesado',
+                    status: response.status,
+                    redirected: response.redirected,
+                    url: response.url,
+                    ok: response.ok
+                }, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                log('❌ Error en login: ' + error.message, 'error');
+            }
+        }
+
+        // LOGIN PARA REACT (CON PARÁMETRO DE REDIRECCIÓN)
+        async function loginForReact() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log('🔄 Enviando login para React...', 'info');
+                
+                // Crear FormData y agregar parámetro para React
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('contrasena', password);
+                formData.append('redirect', 'react');
+                
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                    redirect: 'manual' // No seguir redirecciones automáticamente
+                });
+                
+                log({
+                    message: 'Login para React procesado',
+                    status: response.status,
+                    redirected: response.redirected,
+                    type: response.type,
+                    headers: Object.fromEntries(response.headers.entries())
+                }, 'success');
+                
+            } catch (error) {
+                log('❌ Error en login para React: ' + error.message, 'error');
+            }
+        }
+
+        // VERIFICAR ESTADO DE LOGIN
+        async function checkLoginStatus() {
+            try {
+                log('🔄 Verificando estado de login...', 'info');
+                
+                const response = await fetch('/api/test/login-status', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    log({
+                        status: response.status,
+                        data: data
+                    }, 'success');
+                } else {
+                    const text = await response.text();
+                    log({
+                        status: response.status,
+                        message: 'Respuesta no JSON',
+                        content: text.substring(0, 500)
+                    }, 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Error verificando estado: ' + error.message, 'error');
+            }
+        }
+
+        // TEST API USUARIO
+        async function testUserAPI() {
+            try {
+                log('🔄 Probando /api/usuario/datos...', 'info');
+                
+                const response = await fetch('/api/usuario/datos', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    log({
+                        status: response.status,
+                        data: data
+                    }, response.ok ? 'success' : 'error');
+                } else {
+                    const text = await response.text();
+                    log({
+                        status: response.status,
+                        message: 'Respuesta no JSON - posible redirect a login',
+                        content: text.substring(0, 300)
+                    }, 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Error en API usuario: ' + error.message, 'error');
+            }
+        }
+
+        // TEST AUTH CHECK API
+        async function checkAuthAPI() {
+            try {
+                log('🔄 Probando /api/auth/check...', 'info');
+                
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    log({
+                        status: response.status,
+                        data: data
+                    }, response.ok ? 'success' : 'error');
+                } else {
+                    const text = await response.text();
+                    log({
+                        status: response.status,
+                        message: 'Respuesta no JSON',
+                        content: text.substring(0, 300)
+                    }, 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Error en auth check: ' + error.message, 'error');
+            }
+        }
+
+        // SIMULAR LOGIN DESDE REACT (PUERTO 3000)
+        async function simulateReactLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log('🔄 Simulando login desde React (CORS)...', 'info');
+                
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('contrasena', password);
+                formData.append('redirect', 'react');
+                
+                // Agregar headers que React enviaría
+                const response = await fetch('http://localhost:8080/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                    headers: {
+                        'Origin': 'http://localhost:3000' // Simular origen React
+                    },
+                    redirect: 'manual'
+                });
+                
+                log({
+                    message: 'Login CORS desde React simulado',
+                    status: response.status,
+                    type: response.type,
+                    redirected: response.redirected,
+                    headers: Object.fromEntries(response.headers.entries())
+                }, 'success');
+                
+            } catch (error) {
+                log('❌ Error en login CORS: ' + error.message, 'error');
+            }
+        }
+
+        // SIMULAR API CALL DESDE REACT
+        async function simulateReactAPI() {
+            try {
+                log('🔄 Simulando API call desde React...', 'info');
+                
+                const response = await fetch('http://localhost:8080/api/usuario/datos', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Origin': 'http://localhost:3000',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    log({
+                        message: 'API call CORS exitosa',
+                        status: response.status,
+                        data: data
+                    }, 'success');
+                } else {
+                    const text = await response.text();
+                    log({
+                        message: 'API call CORS - Respuesta no JSON',
+                        status: response.status,
+                        content: text.substring(0, 300)
+                    }, 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Error en API CORS: ' + error.message, 'error');
+            }
+        }
+
+        // Verificar estado inicial al cargar
+        window.onload = function() {
+            checkLoginStatus();
+        }
+    </script>
+</body>
+</html>

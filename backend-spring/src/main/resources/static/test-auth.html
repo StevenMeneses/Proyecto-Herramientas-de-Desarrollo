@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Autenticación</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test de Autenticación Spring Security + CORS</h1>
+    
+    <div class="section">
+        <h2>1. Estado de la Sesión</h2>
+        <button onclick="checkSession()">🔍 Verificar Sesión</button>
+        <div id="sessionResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Test API /api/usuario/datos</h2>
+        <button onclick="testUserData()">📊 Obtener Datos Usuario</button>
+        <div id="userDataResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Test Auth Check</h2>
+        <button onclick="testAuthCheck()">🎭 Verificar Auth</button>
+        <div id="authCheckResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Test con Credenciales</h2>
+        <button onclick="testWithCredentials()">🔑 Test con include: 'credentials'</button>
+        <div id="credentialsResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. Test desde React (puerto 3000)</h2>
+        <p class="info">Este test simula una llamada desde React en localhost:3000</p>
+        <button onclick="testCrossOrigin()">🌐 Test Cross-Origin</button>
+        <div id="crossOriginResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>6. Links útiles</h2>
+        <p>
+            <a href="/login" target="_blank">🔐 Ir a Login</a> | 
+            <a href="/api/auth/check" target="_blank">🔍 Auth Check (directo)</a> | 
+            <a href="/api/usuario/datos" target="_blank">📊 User Data (directo)</a>
+        </p>
+    </div>
+
+    <script>
+        const log = (containerId, message, type = 'info') => {
+            const container = document.getElementById(containerId);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            const timestamp = new Date().toLocaleTimeString();
+            container.innerHTML = `<div class="${className}">[${timestamp}] ${message}</div>`;
+        };
+
+        const logJson = (containerId, data, type = 'info') => {
+            const container = document.getElementById(containerId);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            const timestamp = new Date().toLocaleTimeString();
+            container.innerHTML = `<div class="${className}">[${timestamp}]</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        };
+
+        // 1. Check session
+        async function checkSession() {
+            try {
+                log('sessionResult', 'Verificando sesión...', 'info');
+                const response = await fetch('/api/auth/check');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    logJson('sessionResult', { status: response.status, data }, 'success');
+                } else {
+                    logJson('sessionResult', { status: response.status, error: data }, 'error');
+                }
+            } catch (error) {
+                log('sessionResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // 2. Test user data
+        async function testUserData() {
+            try {
+                log('userDataResult', 'Obteniendo datos del usuario...', 'info');
+                const response = await fetch('/api/usuario/datos');
+                
+                // Verificar si la respuesta es JSON o HTML
+                const contentType = response.headers.get('content-type');
+                console.log('Content-Type:', contentType);
+                console.log('Status:', response.status);
+                
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (response.ok) {
+                        logJson('userDataResult', { status: response.status, data }, 'success');
+                    } else {
+                        logJson('userDataResult', { status: response.status, error: data }, 'error');
+                    }
+                } else {
+                    // Es HTML, probablemente redirigiendo al login
+                    const htmlText = await response.text();
+                    log('userDataResult', `⚠️ Respuesta HTML (redirigiendo): Status ${response.status}. Contenido: ${htmlText.substring(0, 200)}...`, 'error');
+                }
+            } catch (error) {
+                log('userDataResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. Test auth check
+        async function testAuthCheck() {
+            try {
+                log('authCheckResult', 'Verificando autenticación...', 'info');
+                const response = await fetch('/api/auth/check');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    logJson('authCheckResult', { status: response.status, data }, 'success');
+                } else {
+                    logJson('authCheckResult', { status: response.status, error: data }, 'error');
+                }
+            } catch (error) {
+                log('authCheckResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. Test with credentials
+        async function testWithCredentials() {
+            try {
+                log('credentialsResult', 'Test con credentials: include...', 'info');
+                const response = await fetch('/api/usuario/datos', {
+                    method: 'GET',
+                    credentials: 'include', // ← IMPORTANTE: incluye cookies
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                // Verificar contenido de la respuesta
+                const contentType = response.headers.get('content-type');
+                console.log('WITH CREDENTIALS - Content-Type:', contentType);
+                console.log('WITH CREDENTIALS - Status:', response.status);
+                
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (response.ok) {
+                        logJson('credentialsResult', { 
+                            status: response.status, 
+                            data,
+                            info: 'Con credentials: include ✅'
+                        }, 'success');
+                    } else {
+                        logJson('credentialsResult', { 
+                            status: response.status, 
+                            error: data,
+                            info: 'Con credentials: include ❌'
+                        }, 'error');
+                    }
+                } else {
+                    // Es HTML
+                    const htmlText = await response.text();
+                    log('credentialsResult', `⚠️ Con credentials pero respuesta HTML: Status ${response.status}. Contenido: ${htmlText.substring(0, 200)}...`, 'error');
+                }
+            } catch (error) {
+                log('credentialsResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // 5. Test cross-origin (simula React en localhost:3000)
+        async function testCrossOrigin() {
+            try {
+                log('crossOriginResult', 'Simulando llamada cross-origin desde localhost:3000...', 'info');
+                
+                const response = await fetch('http://localhost:8080/api/usuario/datos', {
+                    method: 'GET',
+                    credentials: 'include', // ← CRÍTICO para cross-origin
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': 'http://localhost:3000' // Simula el origen de React
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    logJson('crossOriginResult', { 
+                        status: response.status, 
+                        data,
+                        info: 'Cross-origin con credentials ✅'
+                    }, 'success');
+                } else {
+                    logJson('crossOriginResult', { 
+                        status: response.status, 
+                        error: data,
+                        info: 'Cross-origin con credentials ❌'
+                    }, 'error');
+                }
+            } catch (error) {
+                log('crossOriginResult', `Error CORS/Network: ${error.message}`, 'error');
+            }
+        }
+
+        // Cargar automáticamente al abrir la página
+        window.addEventListener('load', () => {
+            log('sessionResult', 'Página cargada. Haz clic en los botones para probar.', 'info');
+        });
+    </script>
+</body>
+</html>

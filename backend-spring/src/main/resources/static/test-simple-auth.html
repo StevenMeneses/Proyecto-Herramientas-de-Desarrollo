@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple Auth</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-group { margin: 10px 0; }
+        input { width: 100%; padding: 8px; margin: 5px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+        .result { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Simple Authentication</h1>
+        
+        <div class="form-group">
+            <h3>Login Simple</h3>
+            <input type="email" id="email" placeholder="Email" value="jalefmat99@gmail.com">
+            <input type="password" id="password" placeholder="Contraseña" value="123456">
+            <button onclick="simpleLogin()">🚪 Login Simple</button>
+        </div>
+
+        <div class="form-group">
+            <h3>Verificar Sesión</h3>
+            <button onclick="checkSession()">🔍 Check Session Status</button>
+        </div>
+
+        <div class="form-group">
+            <h3>Test API Usuario</h3>
+            <button onclick="testUserAPI()">👤 Test /api/usuario/datos</button>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function log(message, isError = false) {
+            const result = document.getElementById('result');
+            result.className = 'result ' + (isError ? 'error' : 'success');
+            result.innerHTML = '<pre>' + JSON.stringify(message, null, 2) + '</pre>';
+            console.log(message);
+        }
+
+        async function simpleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                log('🔄 Enviando login simple...');
+                
+                const response = await fetch('http://localhost:8080/api/auth/simple-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // IMPORTANTE para sesiones
+                    body: JSON.stringify({
+                        email: email,
+                        contrasena: password
+                    })
+                });
+                
+                const data = await response.json();
+                log({
+                    status: response.status,
+                    success: response.ok,
+                    data: data
+                });
+                
+            } catch (error) {
+                log('❌ Error en login: ' + error.message, true);
+            }
+        }
+
+        async function checkSession() {
+            try {
+                log('🔄 Verificando sesión...');
+                
+                const response = await fetch('http://localhost:8080/api/auth/session-status', {
+                    method: 'GET',
+                    credentials: 'include' // IMPORTANTE para sesiones
+                });
+                
+                const data = await response.json();
+                log({
+                    status: response.status,
+                    success: response.ok,
+                    data: data
+                });
+                
+            } catch (error) {
+                log('❌ Error verificando sesión: ' + error.message, true);
+            }
+        }
+
+        async function testUserAPI() {
+            try {
+                log('🔄 Probando API usuario...');
+                
+                const response = await fetch('http://localhost:8080/api/usuario/datos', {
+                    method: 'GET',
+                    credentials: 'include' // IMPORTANTE para sesiones
+                });
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const data = await response.json();
+                    log({
+                        status: response.status,
+                        success: response.ok,
+                        data: data
+                    });
+                } else {
+                    const text = await response.text();
+                    log({
+                        status: response.status,
+                        success: response.ok,
+                        data: 'HTML Response: ' + text.substring(0, 200) + '...'
+                    });
+                }
+                
+            } catch (error) {
+                log('❌ Error en API usuario: ' + error.message, true);
+            }
+        }
+
+        // Verificar sesión al cargar la página
+        window.onload = function() {
+            checkSession();
+        }
+    </script>
+</body>
+</html>
