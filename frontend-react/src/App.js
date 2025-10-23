@@ -47,6 +47,53 @@ function App() {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [userRole, setUserRole] = useState(0);
 
+  // Función de utilidad para verificar roles
+  const hasRole = (requiredRole) => {
+    return userRole >= requiredRole;
+  };
+
+  // Función para obtener nombre del rol
+  const getRoleName = (roleId) => {
+    switch(roleId) {
+      case 1: return 'ADMINISTRADOR';
+      case 2: return 'VENDEDOR';
+      case 3: return 'CLIENTE';
+      default: return 'SIN AUTENTICAR';
+    }
+  };
+
+  // Log del rol actual cuando cambie
+  useEffect(() => {
+    console.log('🎭 Rol actual actualizado:', {
+      userRole: userRole,
+      roleName: getRoleName(userRole),
+      canEdit: userRole === 1,
+      canManageProducts: userRole === 1 || userRole === 2,
+      isAuthenticated: userRole > 0
+    });
+  }, [userRole]);
+
+  // Función para debug manual
+  const debugRoleInfo = () => {
+    alert(`
+🎭 INFORMACIÓN DE ROL ACTUAL:
+
+📋 Usuario: ${usuario ? `${usuario.nombre} (${usuario.email})` : 'No autenticado'}
+🎯 Rol ID: ${userRole}
+📝 Rol Nombre: ${getRoleName(userRole)}
+
+🔐 PERMISOS:
+${userRole === 1 ? '✅ ADMINISTRADOR - Puede editar todo' : ''}
+${userRole === 2 ? '✅ VENDEDOR - Puede gestionar ventas' : ''}
+${userRole === 3 ? '✅ CLIENTE - Cliente normal' : ''}
+${userRole === 0 ? '❌ SIN PERMISOS - No autenticado' : ''}
+
+💾 STORAGE:
+sessionStorage: ${sessionStorage.getItem('userRole') || 'null'}
+localStorage: ${localStorage.getItem('userRole') || 'null'}
+    `);
+  };
+
 
   // ESTADO PARA NEW COLLECTION
   const [setNewCollectionData] = useState({
@@ -168,8 +215,12 @@ function App() {
             // Actualizar el rol del usuario
             if (userData.idRol) {
               setUserRole(userData.idRol);
-              // Guardar en sessionStorage
+              // Guardar en sessionStorage y localStorage para persistencia
               sessionStorage.setItem("userRole", userData.idRol.toString());
+              localStorage.setItem("userRole", userData.idRol.toString());
+              
+              console.log('🎭 Rol de usuario establecido:', userData.idRol);
+              console.log('   - 1 = ADMIN, 2 = VENDEDOR, 3 = CLIENTE');
             }
           } catch (jsonError) {
             console.error('❌ Error parseando JSON:', jsonError);
@@ -177,9 +228,16 @@ function App() {
         } else {
           console.log('❌ Error HTTP:', response.status);
           setUsuario(null);
+          setUserRole(0); // Sin permisos
+          sessionStorage.removeItem("userRole");
+          localStorage.removeItem("userRole");
         }
       } catch (error) {
         console.error('💥 Error de red:', error);
+        setUsuario(null);
+        setUserRole(0); // Sin permisos
+        sessionStorage.removeItem("userRole");
+        localStorage.removeItem("userRole");
       }
     };
     
@@ -916,6 +974,40 @@ const MarlyCollectionsSection = () => {
                         )}
                       </div>
                     </section>
+
+                    {/* Debug Panel - Solo para desarrollo */}
+                    {process.env.NODE_ENV !== 'production' && (
+                      <section className="debug-panel" style={{
+                        backgroundColor: '#f8f9fa',
+                        padding: '20px',
+                        margin: '20px 0',
+                        borderRadius: '10px',
+                        border: '2px dashed #ccc'
+                      }}>
+                        <h3 style={{ cursor: 'pointer' }} onClick={debugRoleInfo}>🔧 Panel de Debug - Roles (Click para más info)</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginTop: '15px' }}>
+                          <div style={{ padding: '10px', backgroundColor: '#e3f2fd', borderRadius: '5px' }}>
+                            <strong>Usuario Actual:</strong><br/>
+                            {usuario ? `${usuario.nombre} (${usuario.email})` : 'No autenticado'}
+                          </div>
+                          <div style={{ padding: '10px', backgroundColor: '#f3e5f5', borderRadius: '5px' }}>
+                            <strong>Rol ID:</strong><br/>
+                            {userRole} - {getRoleName(userRole)}
+                          </div>
+                          <div style={{ padding: '10px', backgroundColor: '#e8f5e8', borderRadius: '5px' }}>
+                            <strong>Permisos:</strong><br/>
+                            {userRole === 1 && '✅ Puede editar todo'}
+                            {userRole === 2 && '✅ Puede gestionar ventas'}
+                            {userRole === 3 && '✅ Cliente normal'}
+                            {userRole === 0 && '❌ Sin permisos'}
+                          </div>
+                          <div style={{ padding: '10px', backgroundColor: '#fff3cd', borderRadius: '5px' }}>
+                            <strong>Estado Sesión:</strong><br/>
+                            {usuario ? '🟢 Autenticado' : '🔴 No autenticado'}
+                          </div>
+                        </div>
+                      </section>
+                    )}
                   </>
                 } />
 

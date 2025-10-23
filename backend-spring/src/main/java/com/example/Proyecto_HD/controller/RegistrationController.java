@@ -38,11 +38,11 @@ public class RegistrationController {
 
         try {
             // Insertar directamente en la base de datos
-            String sql = "INSERT INTO usuario (nombre, apellido, dni, email, contrasena, telefono, direccion, idRol, activo, correo, id_rol) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO usuario (nombre, apellido, dni, email, contrasena, telefono, direccion, idRol, activo, correo) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             String encodedPassword = passwordEncoder.encode(contrasena);
-            jdbcTemplate.update(sql, nombre, apellido, dni, email, encodedPassword, telefono, direccion, 3, 1, correo, 0);
+            jdbcTemplate.update(sql, nombre, apellido, dni, email, encodedPassword, telefono, direccion, 3, 1, correo);
 
             redirectAttributes.addFlashAttribute("success", 
                 "¡Registro exitoso! Ahora puedes iniciar sesión como cliente.");
@@ -70,11 +70,11 @@ public class RegistrationController {
 
         try {
             // Insertar directamente en la base de datos
-            String sql = "INSERT INTO usuario (nombre, apellido, dni, email, contrasena, telefono, direccion, idRol, activo, correo, id_rol) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO usuario (nombre, apellido, dni, email, contrasena, telefono, direccion, idRol, activo, correo) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             String encodedPassword = passwordEncoder.encode(contrasena);
-            jdbcTemplate.update(sql, nombre, apellido, dni, email, encodedPassword, telefono, direccion, 2, 1, correo, 0);
+            jdbcTemplate.update(sql, nombre, apellido, dni, email, encodedPassword, telefono, direccion, 2, 1, correo);
 
             redirectAttributes.addFlashAttribute("success", 
                 "¡Solicitud de vendedor enviada! Tu cuenta será validada pronto.");
