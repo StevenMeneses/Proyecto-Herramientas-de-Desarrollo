@@ -4,6 +4,7 @@ import com.example.Proyecto_HD.model.Usuario;
 import com.example.Proyecto_HD.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate; // ← Importar JdbcTemplate
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,6 +24,9 @@ public class UsuarioService {
 
      @Autowired
     private EntityManager entityManager; 
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; 
 
     // ✅ Método para buscar por email (FUERA de registrarUsuario)
     public Optional<Usuario> findByEmail(String email) {
@@ -50,8 +54,8 @@ public class UsuarioService {
         
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-            // ⚠️ Comparar directamente sin encriptación
-            if (usuario.getContrasena().equals(password)) {
+            // ✅ Usar PasswordEncoder para verificar la contraseña
+            if (passwordEncoder.matches(password, usuario.getContrasena())) {
                 return Optional.of(usuario);
             } else {
                 // Lanzar excepción con mensaje específico de contraseña incorrecta
@@ -75,12 +79,13 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    // Método adicional para actualizar contraseña si luego quieres encriptar
+    // Método para actualizar contraseña con encriptación
     public void actualizarContrasena(Long idUsuario, String nuevaContrasena) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-            usuario.setContrasena(nuevaContrasena); // o passwordEncoder.encode(nuevaContrasena) si encriptas
+            // ✅ Encriptar la nueva contraseña antes de guardar
+            usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
             usuarioRepository.save(usuario);
         }
     }

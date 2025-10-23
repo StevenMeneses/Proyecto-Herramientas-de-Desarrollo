@@ -1,25 +1,19 @@
 package com.example.Proyecto_HD.controller;
 
 import com.example.Proyecto_HD.model.Usuario;
-import com.example.Proyecto_HD.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.Proyecto_HD.service.CustomUserDetailsService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Controller
 public class AuthController {
-
-    @Autowired
-    private UsuarioService usuarioService;
 
     // Redirige a la página de login por defecto
     @GetMapping("/")
@@ -30,120 +24,57 @@ public class AuthController {
     // Muestra la página de login (THYMELEAF - NO React)
     @GetMapping("/login")
     public String showLoginPage(@RequestParam(value = "error", required = false) String error,
-                               @RequestParam(value = "success", required = false) String success,
+                               @RequestParam(value = "logout", required = false) String logout,
                                Model model) {
         if (error != null) {
-            model.addAttribute("error", error);
+            model.addAttribute("error", "Credenciales incorrectas. Inténtalo de nuevo.");
         }
-        if (success != null) {
-            model.addAttribute("success", success);
+        if (logout != null) {
+            model.addAttribute("success", "Has cerrado sesión correctamente.");
         }
         return "login"; // Devuelve la plantilla Thymeleaf
     }
 
-    // Muestra la página de registro (THYMELEAF - NO React)
-    @GetMapping("/registro")
-    public String showRegisterPage(@RequestParam(value = "error", required = false) String error,
-                                  @RequestParam(value = "success", required = false) String success,
-                                  Model model) {
-        if (error != null) {
-            model.addAttribute("error", error);
+    // Dashboard después del login exitoso
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetailsService.CustomUserPrincipal) {
+            CustomUserDetailsService.CustomUserPrincipal userPrincipal = 
+                (CustomUserDetailsService.CustomUserPrincipal) auth.getPrincipal();
+            Usuario usuario = userPrincipal.getUsuario();
+            model.addAttribute("usuario", usuario);
         }
-        if (success != null) {
-            model.addAttribute("success", success);
-        }
-        return "registro"; // Devuelve la plantilla Thymeleaf
+        return "dashboard";
     }
 
-    // Procesa el login (FORMULARIO THYMELEAF)
-    @PostMapping("/login")
-    public String processLogin(@RequestParam String email,
-                          @RequestParam String contrasena,
-                          HttpSession session,
-                          HttpServletResponse response,
-                          Model model) {
-    
-
-        try {
-            Optional<Usuario> usuarioOpt = usuarioService.autenticarUsuario(email, contrasena);
-            
-            if (usuarioOpt.isPresent()) {
-                Usuario usuario = usuarioOpt.get();
-                
-                // DEBUG: Verificar datos
-                System.out.println("Login exitoso: " + usuario.getEmail());
-                System.out.println("Rol: " + usuario.getIdRol());
-                
-                // Guardar usuario en sesión
-                session.setAttribute("usuario", usuario);
-                
-                // Configurar cookie manualmente para CORS
-                response.setHeader("Set-Cookie", 
-                    "JSESSIONID=" + session.getId() + 
-                    "; Path=/; " + 
-                    "Domain=localhost; " + 
-                    "SameSite=None; " + 
-                    "Secure=false; " + 
-                    "HttpOnly=false; " + 
-                    "Max-Age=3600");
-                
-                return "redirect:http://localhost:3000?login=success";
-            } else {
-                model.addAttribute("error", "El correo o contraseña son incorrectos");
-                return "login";
-            }
-            
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "login";
-        } catch (Exception e) {
-            model.addAttribute("error", "Error en el login: " + e.getMessage());
-            return "login";
-
-        }
-    }
-
-    // Endpoint para cerrar sesión
-    @RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
-    public String logout(HttpSession session, HttpServletResponse response) {
-        // Invalidar la sesión
-        session.invalidate();
-        
-        // Limpiar cookies (opcional pero recomendado)
-        Cookie cookie = new Cookie("JSESSIONID", null);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-        
-        return "redirect:/login?logout=success";
-    }
-
-    // APIs JSON para React (OPCIONAL - si las necesitas)
-    @PostMapping("/api/login")
+    // API para obtener información del usuario logueado (para React)
+    @GetMapping("/api/user-info")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> apiLogin(@RequestBody Map<String, String> loginData,
-                                                       HttpSession session) {
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> getUserInfo() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Map<String, Object> response = new HashMap<>();
         
-        try {
-            // CORRECCIÓN: Agregar .orElse(null) ↓
-            Usuario usuario = usuarioService.autenticarUsuario(
-                loginData.get("email"), 
-                loginData.get("contrasena")
-            ).orElse(null); // ← ESTO FALTABA
+        if (auth != null && auth.isAuthenticated() && 
+            auth.getPrincipal() instanceof CustomUserDetailsService.CustomUserPrincipal) {
             
-            if (usuario != null) {
-                session.setAttribute("usuario", usuario);
-                response.put("success", "Login exitoso");
-                response.put("redirect", "http://localhost:3000");
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("error", "Credenciales incorrectas");
-                return ResponseEntity.badRequest().body(response);
-            }
-        } catch (Exception e) {
-            response.put("error", "Error en el login: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            CustomUserDetailsService.CustomUserPrincipal userPrincipal = 
+                (CustomUserDetailsService.CustomUserPrincipal) auth.getPrincipal();
+            Usuario usuario = userPrincipal.getUsuario();
+            
+            response.put("authenticated", true);
+            response.put("usuario", Map.of(
+                "id", usuario.getIdUsuario(),
+                "nombre", usuario.getNombre(),
+                "apellido", usuario.getApellido(),
+                "email", usuario.getEmail(),
+                "rol", usuario.getIdRol()
+            ));
+            
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("authenticated", false);
+            return ResponseEntity.ok(response);
         }
     }
 }

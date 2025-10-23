@@ -23,16 +23,6 @@ public class ReactController {
         return "forward:/index.html";
     }
     
-    @GetMapping("/dashboard")
-    public String serveDashboard(HttpSession session) {
-        // Verificar si el usuario está autenticado
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) {
-            return "redirect:/login?error=Por favor inicia sesión";
-        }
-        return "forward:/index.html";
-    }
-    
     @GetMapping("/perfil")
     public String serveProfile(HttpSession session) {
         Usuario usuario = (Usuario) session.getAttribute("usuario");

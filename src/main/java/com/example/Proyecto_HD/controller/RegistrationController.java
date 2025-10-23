@@ -1,7 +1,8 @@
-package com.mariyhandmade.controller;
+package com.example.Proyecto_HD.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -12,6 +13,9 @@ public class RegistrationController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Mostrar página de registro
     @GetMapping
@@ -37,7 +41,8 @@ public class RegistrationController {
             String sql = "INSERT INTO usuario (nombre, apellido, dni, email, contrasena, telefono, direccion, idRol, activo, correo, id_rol) " +
                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
-            jdbcTemplate.update(sql, nombre, apellido, dni, email, contrasena, telefono, direccion, 3, 1, correo, 0);
+            String encodedPassword = passwordEncoder.encode(contrasena);
+            jdbcTemplate.update(sql, nombre, apellido, dni, email, encodedPassword, telefono, direccion, 3, 1, correo, 0);
 
             redirectAttributes.addFlashAttribute("success", 
                 "¡Registro exitoso! Ahora puedes iniciar sesión como cliente.");
@@ -68,7 +73,8 @@ public class RegistrationController {
             String sql = "INSERT INTO usuario (nombre, apellido, dni, email, contrasena, telefono, direccion, idRol, activo, correo, id_rol) " +
                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
-            jdbcTemplate.update(sql, nombre, apellido, dni, email, contrasena, telefono, direccion, 2, 1, correo, 0);
+            String encodedPassword = passwordEncoder.encode(contrasena);
+            jdbcTemplate.update(sql, nombre, apellido, dni, email, encodedPassword, telefono, direccion, 2, 1, correo, 0);
 
             redirectAttributes.addFlashAttribute("success", 
                 "¡Solicitud de vendedor enviada! Tu cuenta será validada pronto.");
