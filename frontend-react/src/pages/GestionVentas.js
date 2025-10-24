@@ -5,6 +5,10 @@ import SalesCharts from '../components/SalesCharts';
 import '../components/CategoryProducts.css';
 import '../components/SalesCharts.css';
 
+const API_BASE = window.location.hostname.includes('render.com') 
+  ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
+  : 'http://localhost:8080';
+
 const GestionVentas = () => {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('ventas');
@@ -13,7 +17,7 @@ const GestionVentas = () => {
     const fetchUserData = async () => {
       try {
         console.log('🔍 GestionVentas: Solicitando datos de usuario');
-        const response = await fetch('http://localhost:8080/api/usuario/datos', {
+        const response = await fetch(`${API_BASE}/api/usuario/datos`, {
           credentials: 'include'
         });
         

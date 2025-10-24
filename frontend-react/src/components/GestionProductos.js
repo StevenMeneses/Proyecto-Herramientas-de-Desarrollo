@@ -20,6 +20,10 @@ const GestionProductos = ({ categoria }) => {
   const [imagenFile, setImagenFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  const API_BASE = window.location.hostname.includes('render.com') 
+  ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
+  : 'http://localhost:8080';
+
   // Mapeo de categorías a IDs
   const categoryMap = {
     'anillos': 1,
@@ -147,7 +151,7 @@ const GestionProductos = ({ categoria }) => {
       setIsLoading(true);
       try {
         // Datos del usuario
-        const userResponse = await fetch('http://localhost:8080/api/usuario/datos', {
+        const userResponse = await fetch(`${API_BASE}/api/usuario/datos`, {
           credentials: 'include'
         });
         

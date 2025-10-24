@@ -36,6 +36,10 @@ import CartPanel from './components/CartPanel';
 import FavoritesPanel from './components/FavoritesPanel';
 import Header from './components/Header';
 
+// Configuración de API base
+const API_BASE = window.location.hostname.includes('render.com') 
+  ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
+  : 'http://localhost:8080';
 
 function App() {
   
@@ -194,7 +198,7 @@ localStorage: ${localStorage.getItem('userRole') || 'null'}
       try {
         console.log('🔍 Haciendo request a /api/usuario/datos');
         
-        const response = await fetch('http://localhost:8080/api/usuario/datos', {
+        const response = await fetch(`${API_BASE}/api/usuario/datos`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
@@ -360,10 +364,10 @@ const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
         setUserRole(0);
         sessionStorage.removeItem("userRole");
         localStorage.removeItem("userRole");
-        window.location.href = 'http://localhost:8080/login?logout=success';
+        window.location.href = `${API_BASE}/login?logout=success`;
       } catch (error) {
         console.error('Error durante el logout:', error);
-        window.location.href = 'http://localhost:8080/login';
+        window.location.href = `${API_BASE}/login`;
       }
     }
   };

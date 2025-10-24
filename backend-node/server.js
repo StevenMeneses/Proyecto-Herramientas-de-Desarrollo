@@ -5,9 +5,13 @@ const cors = require('cors');
 const fs = require('fs');
 const app = express();
 
+const SERVER_BASE = process.env.NODE_ENV === 'production' 
+  ? 'https://proyecto-herramientas-de-desarrollo-1.onrender.com'
+  : 'http://localhost:5000';
+
 // Middlewares PRIMERO
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://proyecto-herramientas-de-desarrollo.onrender.com"],
     credentials: true
 }));
 app.use(express.json());
@@ -247,7 +251,7 @@ app.post('/api/upload-product-image', upload.single('productImage'), (req, res) 
             });
         }
 
-        const imageUrl = `http://localhost:5000/uploads/${collection}/${filename}`;
+        const imageUrl = `${SERVER_BASE}/uploads/${collection}/${filename}`;
         const imagePath = `/uploads/${collection}/${filename}`;
 
         console.log('✅ Archivo subido exitosamente:', {
@@ -309,7 +313,7 @@ app.get('/api/sea-collection-header-image', (req, res) => {
 
     // Tomar la imagen más reciente
     const latestImage = files[0];
-    const imageUrl = `http://localhost:5000/uploads/headers/sea-collection/${latestImage}`;
+    const imageUrl = `${SERVER_BASE}/uploads/headers/sea-collection/${latestImage}`;
 
     console.log('🌊 Header image encontrada para Sea Collection:', latestImage);
 
@@ -351,7 +355,7 @@ app.get('/api/matarita-collection-header-image', (req, res) => {
 
     // Tomar la imagen más reciente
     const latestImage = files[0];
-    const imageUrl = `http://localhost:5000/uploads/headers/matarita-collection/${latestImage}`;
+    const imageUrl = `${SERVER_BASE}/uploads/headers/matarita-collection/${latestImage}`;
 
     console.log('🍹 Header image encontrada para Matarita Collection:', latestImage);
 
@@ -393,7 +397,7 @@ app.get('/api/best-sellers-header-image', (req, res) => {
 
     // Tomar la imagen más reciente
     const latestImage = files[0];
-    const imageUrl = `http://localhost:5000/uploads/headers/best-sellers/${latestImage}`;
+    const imageUrl = `${SERVER_BASE}/uploads/headers/best-sellers/${latestImage}`;
 
     console.log('⭐ Header image encontrada para Best Sellers:', latestImage);
 
@@ -434,7 +438,7 @@ app.get('/api/matarita-header-image', (req, res) => {
     }
 
     const latestImage = files[0];
-    const imageUrl = `http://localhost:5000/uploads/headers/matarita-collection/${latestImage}`;
+    const imageUrl = `${SERVER_BASE}/uploads/headers/matarita-collection/${latestImage}`;
 
     res.json({
         success: true,
@@ -468,7 +472,7 @@ app.post('/api/upload-header-image', upload.single('headerImage'), (req, res) =>
 
         fs.writeFileSync(filePath, req.file.buffer);
 
-        const imageUrl = `http://localhost:5000/uploads/headers/${collection}/${filename}`;
+        const imageUrl = `${SERVER_BASE}/uploads/headers/${collection}/${filename}`;
 
         res.json({
             success: true,
@@ -534,7 +538,7 @@ function uploadHeaderImage(req, res, collectionType) {
 
         fs.writeFileSync(filePath, req.file.buffer);
 
-        const imageUrl = `http://localhost:5000/uploads/headers/${collection}/${filename}`;
+        const imageUrl = `${SERVER_BASE}/uploads/headers/${collection}/${filename}`;
 
         console.log(`✅ Header image subida exitosamente para ${collectionType}:`, imageUrl);
 
@@ -583,8 +587,8 @@ app.get('/files', (req, res) => {
                     const stats = fs.statSync(filePath);
                     return {
                         filename: file,
-                        url: `http://localhost:5000/uploads/${collection}/${file}`,
-                        imageUrl: `http://localhost:5000/uploads/${collection}/${file}`,
+                        url: `${SERVER_BASE}/uploads/${collection}/${file}`,
+                        imageUrl: `${SERVER_BASE}/uploads/${collection}/${file}`,
                         path: `/uploads/${collection}/${file}`,
                         size: stats.size,
                         created: stats.birthtime
@@ -618,8 +622,8 @@ app.get('/check-image/:collection/:filename', (req, res) => {
         const stats = fs.statSync(filePath);
         res.json({ 
             exists: true,
-            url: `http://localhost:5000/uploads/${actualCollection}/${filename}`,
-            imageUrl: `http://localhost:5000/uploads/${actualCollection}/${filename}`,
+            url: `${SERVER_BASE}/uploads/${actualCollection}/${filename}`,
+            imageUrl: `${SERVER_BASE}/uploads/${actualCollection}/${filename}`,
             size: stats.size,
             created: stats.birthtime
         });
@@ -707,7 +711,7 @@ app.use('*', (req, res) => {
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log('=================================');
-    console.log(`🚀 Servidor ejecutándose en http://localhost:5000`);
+    console.log(`🚀 Servidor ejecutándose en ${SERVER_BASE}`);
     console.log('=================================');
     console.log('📁 Directorios creados:');
     console.log('   - uploads/categories/');

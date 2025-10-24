@@ -18,6 +18,10 @@ const GestionCollection = () => {
   const [imagenFile, setImagenFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  const API_BASE = window.location.hostname.includes('render.com') 
+  ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
+  : 'http://localhost:8080';
+
   // NUEVOS CAMPOS PARA FILTROS
   const productTypeOptions = ['Anillo', 'Brazalete', 'Arete', 'Aro', 'Collar'];
   const materialOptions = ['Oro', 'Plata', 'Acero quirúrgico', 'Chapado en oro', 'Otro'];
@@ -260,7 +264,7 @@ const GestionCollection = () => {
       setIsLoading(true);
       try {
         try {
-          const userResponse = await fetch('http://localhost:8080/api/usuario/datos', {
+          const userResponse = await fetch(`${API_BASE}/api/usuario/datos`, {
             credentials: 'include'
           });
           

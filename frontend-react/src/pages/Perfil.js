@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import '../components/Perfil.css';
 
+const API_BASE = window.location.hostname.includes('render.com') 
+  ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
+  : 'http://localhost:8080';
+
 const Perfil = () => {
   const [usuario, setUsuario] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -14,11 +18,13 @@ const Perfil = () => {
     direccion: ''
   });
 
+  
+
   useEffect(() => {
     // Obtener datos del usuario desde la API
     const fetchUsuario = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/usuario/datos', {
+        const response = await fetch(`${API_BASE}/api/usuario/datos`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
@@ -56,7 +62,7 @@ const Perfil = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/api/usuario/actualizar', {
+      const response = await fetch(`${API_BASE}/api/usuario/actualizar`, {
         method: 'PUT',
         credentials: 'include',
         headers: {

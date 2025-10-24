@@ -17,6 +17,10 @@ const ProductBasePage = ({ category, title, subtitle }) => {
   const { addToCart } = useContext(CartContext);
   const { addToFavorites, removeFromFavorites, isFavorite } = useContext(FavoritesContext);
 
+  const API_BASE = window.location.hostname.includes('render.com') 
+  ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
+  : 'http://localhost:8080';
+
   // Datos del formulario de gestión
   const [formData, setFormData] = useState({
     idProducto: '',
@@ -127,7 +131,7 @@ const ProductBasePage = ({ category, title, subtitle }) => {
     const fetchData = async () => {
       try {
         // Datos del usuario
-        const userResponse = await fetch('http://localhost:8080/api/usuario/datos', {
+        const userResponse = await fetch(`${API_BASE}/api/usuario/datos`, {
           credentials: 'include'
         });
         if (userResponse.ok) {
