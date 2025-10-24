@@ -78,16 +78,28 @@ public class ForceSessionAuthenticationSuccessHandler implements AuthenticationS
     }
     
     private String determineTargetUrl(HttpServletRequest request, Authentication authentication) {
+        // ✅ DETECCIÓN DINÁMICA DE ENTORNO
+        String serverName = request.getServerName();
+        boolean isProduction = serverName.contains("render.com");
+        String frontendUrl = isProduction 
+            ? "https://proyecto-herramientas-de-desarrollo.onrender.com"
+            : "http://localhost:3000";
+        
+        System.out.println("🌍 Entorno detectado:");
+        System.out.println("   - Server: " + serverName);
+        System.out.println("   - Producción: " + isProduction);
+        System.out.println("   - Frontend URL: " + frontendUrl);
+        
         // Verificar si hay un parámetro de redirección desde React
         String redirectParam = request.getParameter("redirect");
         if ("react".equals(redirectParam)) {
-            return "http://localhost:3000/dashboard";
+            return frontendUrl + "/dashboard";  // ✅ URL DINÁMICA
         }
         
         // Verificar si la petición viene de React (por el origen)
         String origin = request.getHeader("Origin");
-        if (origin != null && origin.contains("localhost:3000")) {
-            return "http://localhost:3000/dashboard";
+        if (origin != null && (origin.contains("localhost:3000") || origin.contains("render.com"))) {
+            return frontendUrl + "/dashboard";  // ✅ URL DINÁMICA
         }
         
         // Para requests desde la aplicación Spring Boot, ir al endpoint de verificación
