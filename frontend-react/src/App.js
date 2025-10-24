@@ -351,26 +351,30 @@ const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
 
 
 
-  const handleLogout = async (e) => {
-    e.preventDefault();
-    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-      try {
-        await fetch('/logout', {
-          method: 'GET',
-          credentials: 'include'
-        });
-        
-        setUsuario(null);
-        setUserRole(0);
-        sessionStorage.removeItem("userRole");
-        localStorage.removeItem("userRole");
-        window.location.href = `${API_BASE}/login?logout=success`;
-      } catch (error) {
-        console.error('Error durante el logout:', error);
-        window.location.href = `${API_BASE}/login`;
-      }
+const handleLogout = async (e) => {
+  e.preventDefault();
+  if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+    try {
+      await fetch(`${API_BASE}/logout`, {  // ✅ Usa API_BASE para el logout
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      setUsuario(null);
+      setUserRole(0);
+      sessionStorage.removeItem("userRole");
+      localStorage.removeItem("userRole");
+      
+      // ✅ Redirige al FRONTEND, no al BACKEND
+      window.location.href = `${window.location.origin}/?logout=success`;
+      
+    } catch (error) {
+      console.error('Error durante el logout:', error);
+      // ✅ En caso de error también redirige al FRONTEND
+      window.location.href = window.location.origin;
     }
-  };
+  }
+};
 
   // COMPONENTE NEW COLLECTION ACTUALIZADO
 // COMPONENTE NEW COLLECTION SIMPLIFICADO
