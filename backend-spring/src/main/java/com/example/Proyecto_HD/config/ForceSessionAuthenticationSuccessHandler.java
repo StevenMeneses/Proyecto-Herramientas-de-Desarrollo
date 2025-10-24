@@ -93,13 +93,13 @@ public class ForceSessionAuthenticationSuccessHandler implements AuthenticationS
         // Verificar si hay un parámetro de redirección desde React
         String redirectParam = request.getParameter("redirect");
         if ("react".equals(redirectParam)) {
-            return frontendUrl + "/dashboard";  // ✅ URL DINÁMICA
+            return frontendUrl;  // ✅ CORREGIDO: Sin /dashboard
         }
         
         // Verificar si la petición viene de React (por el origen)
         String origin = request.getHeader("Origin");
         if (origin != null && (origin.contains("localhost:3000") || origin.contains("render.com"))) {
-            return frontendUrl + "/dashboard";  // ✅ URL DINÁMICA
+            return frontendUrl;  // ✅ CORREGIDO: Sin /dashboard
         }
         
         // Para requests desde la aplicación Spring Boot, ir al endpoint de verificación
