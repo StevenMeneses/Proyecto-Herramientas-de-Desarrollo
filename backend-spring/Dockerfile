@@ -29,17 +29,18 @@ FROM eclipse-temurin:21-jre-alpine
 # Establecer directorio de trabajo
 WORKDIR /app
 
+# ⭐⭐ IMPORTANTE: Primero crear directorio COMO ROOT ⭐⭐
+# Crear directorio para SQLite con permisos adecuados
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 # Crear usuario no-root para seguridad
 RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
-
-# ⭐⭐ CREAR DIRECTORIO PARA SQLITE ⭐⭐
-# Este directorio será persistente en Render
-RUN mkdir -p /app/data
-RUN chmod 755 /app/data
 
 # Copiar JAR desde etapa de construcción
-COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
+
+# Cambiar al usuario no-root
+USER spring:spring
 
 # Puerto expuesto
 EXPOSE 8080

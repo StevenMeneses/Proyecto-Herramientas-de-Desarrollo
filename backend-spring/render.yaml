@@ -3,7 +3,7 @@ services:
     name: proyecto-hd-backend
     env: docker
     plan: free
-    region: oregon  # o virginia, singapore, frankfurt
+    region: oregon
     
     # Configuración Docker
     dockerfilePath: ./Dockerfile
@@ -15,24 +15,18 @@ services:
         value: production
       - key: JAVA_OPTS
         value: "-Xmx512m -Xms256m"
-      - key: TZ
-        value: "America/Lima"
     
     # ⭐⭐ DISCO PERSISTENTE PARA SQLITE ⭐⭐
-    # ESTO ES LO MÁS IMPORTANTE
+    # IMPORTANTE: Render montará aquí automáticamente
     disk:
       name: sqldata
       mountPath: /app/data
       sizeGB: 1
     
-    # Health check
-    healthCheckPath: /api/system/health
-    initialDelaySec: 120  # Dar tiempo a que SQLite se inicialice
+    # Health check (dar más tiempo para SQLite)
+    healthCheckPath: /actuator/health
+    initialDelaySec: 180
     
     # Auto despliegue
     autoDeploy: true
     branch: main
-    
-    # Recursos
-    numInstances: 1
-    # plan: free  # Ya está arriba
