@@ -31,3 +31,56 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ============================================
+# IMPORTANTE: EXCEPCIONES PARA SQLITE EN GITHUB
+# ============================================
+
+# PERMITIR carpeta de datos de SQLite
+!src/main/resources/data/
+
+# PERMITIR archivos .db pero NO los temporales
+!**/*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*-journal
+*-shm
+*-wal
+
+# Excluir archivos de backup temporales pero PERMITIR backups controlados
+src/main/resources/data/*-backup*.db
+!src/main/resources/data/backup_*.db
+
+# Excluir archivos de lock/log pero PERMITIR la BD principal
+*.lock
+*.log
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+
+# =============================================
+# CONFIGURACIÓN SQLITE PARA GITHUB/RENDER
+# =============================================
+
+# PERMITIR la carpeta data/ completa
+!src/main/resources/data/
+
+# PERMITIR estos archivos específicos en data/
+!src/main/resources/data/.gitkeep
+!src/main/resources/data/README.md
+!src/main/resources/data/*.db
+
+# EXCLUIR archivos temporales de SQLite
+src/main/resources/data/*-journal
+src/main/resources/data/*-shm
+src/main/resources/data/*-wal
+src/main/resources/data/*.db-*
+src/main/resources/data/.db-*
+
+# EXCLUIR otros archivos no deseados en data/
+src/main/resources/data/*.log
+src/main/resources/data/*.lock
+src/main/resources/data/*.tmp
+src/main/resources/data/*.temp
