@@ -1,4 +1,4 @@
-package com.example.Proyecto_HD.controller;
+/*package com.example.Proyecto_HD.controller;
 
 import com.example.Proyecto_HD.service.CustomUserDetailsService;
 import org.springframework.security.core.Authentication;
@@ -77,3 +77,4 @@ public class AuthTestController {
         return response;
     }
 }
+*/  // <-- ¡ESTO ES LO QUE TE FALTA!

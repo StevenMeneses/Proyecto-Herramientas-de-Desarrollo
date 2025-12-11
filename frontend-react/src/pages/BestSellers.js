@@ -18,15 +18,57 @@ const BestSellers = () => {
   });
   const [uploading, setUploading] = useState(false);
 
+  // URL dinámica del backend
+  const getBackendUrl = () => {
+    return window.location.hostname.includes('localhost')
+      ? 'http://localhost:5000'
+      : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+  };
+
+  // Función para obtener imagen - ACTUALIZADA PARA USAR BACKEND DINÁMICO
+  const obtenerImagen = (imagePath) => {
+    if (!imagePath) return '/images/placeholder-product.jpg';
+    
+    const backendUrl = getBackendUrl();
+    
+    // Si ya es una URL completa del backend
+    if (imagePath.startsWith('http://localhost:5000') || 
+        imagePath.startsWith('https://proyecto-herramientas-de-desarrollo-1.onrender.com')) {
+      
+      // Si estamos en producción pero la URL tiene localhost, corregirla
+      if (imagePath.includes('localhost:5000') && !window.location.hostname.includes('localhost')) {
+        return imagePath.replace('http://localhost:5000', backendUrl);
+      }
+      return imagePath;
+    }
+    
+    // Si es solo el path (ej: /uploads/sea-collection/filename.png)
+    if (imagePath.startsWith('/uploads/')) {
+      return `${backendUrl}${imagePath}`;
+    }
+    
+    // Si es un nombre de archivo, intentar construir la URL según el tipo
+    if (imagePath && !imagePath.startsWith('http') && !imagePath.startsWith('/')) {
+      // Para imágenes existentes que aún no están en el backend
+      return '/images/placeholder-product.jpg';
+    }
+    
+    return '/images/placeholder-product.jpg';
+  };
+
   // Cargar imagen del header desde el backend
   useEffect(() => {
     const loadHeaderImage = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/best-sellers-header-image');
+        const backendUrl = getBackendUrl();
+        const response = await fetch(`${backendUrl}/api/best-sellers-header-image`);
+        
         if (response.ok) {
           const data = await response.json();
           if (data.imageUrl) {
-            setHeaderImage(data.imageUrl);
+            // Usar obtenerImagen para normalizar la URL
+            const correctedImageUrl = obtenerImagen(data.imageUrl);
+            setHeaderImage(correctedImageUrl);
           }
         }
       } catch (error) {
@@ -52,7 +94,13 @@ const BestSellers = () => {
         stock: producto.stock
       }));
       
-      setProducts(productosMapeados);
+      // Corregir las URLs de las imágenes de los productos
+      const productosCorregidos = productosMapeados.map(producto => ({
+        ...producto,
+        imagenUrl: producto.imagenUrl ? obtenerImagen(producto.imagenUrl) : null
+      }));
+      
+      setProducts(productosCorregidos);
     } else {
       setProducts([]);
     }
@@ -91,14 +139,19 @@ const BestSellers = () => {
       formData.append('headerImage', file);
 
       try {
-        const response = await fetch('http://localhost:5000/api/upload-best-sellers-header-image', {
+        const backendUrl = getBackendUrl();
+        const response = await fetch(`${backendUrl}/api/upload-best-sellers-header-image`, {
           method: 'POST',
           body: formData,
         });
 
         if (response.ok) {
           const result = await response.json();
-          setHeaderImage(result.imageUrl);
+          
+          // Usar obtenerImagen para normalizar la URL recibida
+          const correctedImageUrl = obtenerImagen(result.imageUrl);
+          setHeaderImage(correctedImageUrl);
+          
           alert('Imagen subida exitosamente');
         } else {
           throw new Error('Error al subir la imagen');
@@ -110,24 +163,6 @@ const BestSellers = () => {
         setUploading(false);
       }
     }
-  };
-
-  // Función para obtener imagen - ACTUALIZADA PARA USAR BACKEND
-  const obtenerImagen = (imagePath) => {
-    if (!imagePath) return '/images/placeholder-product.jpg';
-    
-    // Si ya es una URL completa del backend, devuélvela directamente
-    if (imagePath.startsWith('http://localhost:5000')) {
-      return imagePath;
-    }
-    
-    // Si es un nombre de archivo, intentar construir la URL según el tipo
-    if (imagePath && !imagePath.startsWith('http')) {
-      // Para imágenes existentes que aún no están en el backend
-      return '/images/placeholder-product.jpg';
-    }
-    
-    return '/images/placeholder-product.jpg';
   };
 
   const toggleMaterialFilter = (material) => {

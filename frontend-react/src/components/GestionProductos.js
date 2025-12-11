@@ -58,8 +58,13 @@ const GestionProductos = ({ categoria }) => {
   const [originalCategory, setOriginalCategory] = useState(categoryId);
 
   // Claves para localStorage
-  const STORAGE_KEY = 'joyeria_productos';
-  const SERVER_URL = 'http://localhost:5000';
+  // Claves para localStorage
+const STORAGE_KEY = 'joyeria_productos';
+
+// URL del servidor dinámica según entorno
+const SERVER_URL = window.location.hostname.includes('localhost')
+    ? 'http://localhost:5000'
+    : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
 
   // Función para subir imagen al servidor
   const subirImagenAlServidor = async (file) => {
@@ -102,9 +107,22 @@ const GestionProductos = ({ categoria }) => {
     if (!imagePath) return '/images/placeholder-product.jpg';
     
     // Si ya es una URL completa del servidor, usarla directamente
-    if (imagePath.includes('http://localhost:5000')) {
-      return imagePath;
+    // Versión corregida para manejar ambos entornos
+if (imagePath.includes('http://localhost:5000') || 
+    imagePath.includes('https://proyecto-herramientas-de-desarrollo-1.onrender.com')) {
+    
+    // Si estamos en producción pero la URL tiene localhost, corregirla
+    const isLocalhost = window.location.hostname.includes('localhost');
+    const backendUrl = isLocalhost 
+        ? 'http://localhost:5000' 
+        : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+    
+    if (!isLocalhost && imagePath.includes('localhost:5000')) {
+        return imagePath.replace('http://localhost:5000', backendUrl);
     }
+    
+    return imagePath;
+}
     
     // Si es una ruta relativa, construir la URL del servidor
     if (imagePath.startsWith('/')) {

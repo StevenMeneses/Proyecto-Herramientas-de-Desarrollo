@@ -3,7 +3,8 @@
     "filename": "header-1758995086476-510340591.png",
     "originalName": "NewColletions.png",
     "path": "C:\\Users\\Usuario\\Downloads\\Proyecto_HD\\src\\main\\resources\\Server\\uploads\\headers\\header-1758995086476-510340591.png",
-    "url": "http://localhost:5000/uploads/headers/header-1758995086476-510340591.png",
+    "localUrl": "http://localhost:5000/uploads/headers/header-1758995086476-510340591.png",
+    "productionUrl": "https://proyecto-herramientas-de-desarrollo-1.onrender.com/uploads/headers/header-1758995086476-510340591.png",
     "uploadedAt": "2025-09-27T17:44:46.517Z"
   }
 ]

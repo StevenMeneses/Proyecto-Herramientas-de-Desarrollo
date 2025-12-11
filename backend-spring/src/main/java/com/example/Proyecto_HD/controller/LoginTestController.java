@@ -52,12 +52,25 @@ public class LoginTestController {
         
         // Si es redirección después de login y está autenticado, redirigir a React
         if ("true".equals(redirect) && status.get("authenticated").equals(true)) {
-            response.sendRedirect("http://localhost:3000?login=success");
+            // Determinar la URL del frontend dinámicamente
+            String frontendUrl;
+            
+            // Verificar si estamos en entorno de Render (producción)
+            String renderEnv = System.getenv("RENDER");
+            if (renderEnv != null && !renderEnv.isEmpty()) {
+                // Estamos en Render - usar la URL de producción
+                frontendUrl = "https://proyecto-herramientas-de-desarrollo.onrender.com";
+            } else {
+                // Estamos en desarrollo local
+                frontendUrl = "http://localhost:3000";
+            }
+            
+            response.sendRedirect(frontendUrl + "?login=success");
             return null;
         }
         
         return ResponseEntity.ok(status);
-    }
+    } // ← ¡FALTA ESTA LLAVE DE CIERRE!
 
     @GetMapping("/simple")
     public ResponseEntity<String> simple() {

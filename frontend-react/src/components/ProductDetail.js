@@ -32,19 +32,48 @@ const ProductDetail = () => {
   };
 
   // Función para obtener imagen
-  const obtenerImagen = (imagePath, tipo) => {
+const obtenerImagen = (imagePath, tipo) => {
     if (!imagePath) return '/images/placeholder-product.jpg';
     
-    if (imagePath.startsWith('http://localhost:5000')) {
-      return imagePath;
+    // Detectar entorno
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+    
+    const backendUrl = isLocalhost 
+        ? 'http://localhost:5000' 
+        : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+    
+    // Caso 1: URL completa del backend
+    if (imagePath.startsWith('http://localhost:5000') || 
+        imagePath.startsWith('https://proyecto-herramientas-de-desarrollo-1.onrender.com')) {
+        
+        // Si estamos en producción pero la URL tiene localhost, corregirla
+        if (!isLocalhost && imagePath.includes('localhost:5000')) {
+            return imagePath.replace('http://localhost:5000', backendUrl);
+        }
+        return imagePath;
     }
     
+    // Caso 2: Ruta relativa (/uploads/...)
     if (imagePath.startsWith('/uploads/')) {
-      return `http://localhost:5000${imagePath}`;
+        return `${backendUrl}${imagePath}`;
+    }
+    
+    // Caso 3: Si es solo nombre de archivo - SIN mapTipoToFolderName
+    if (imagePath && !imagePath.startsWith('http') && !imagePath.startsWith('/')) {
+        // Si tienes 'tipo' y necesitas una carpeta específica
+        if (tipo) {
+            // Opción A: Carpeta por defecto basada en tipo (si no tienes la función map)
+            const folderName = tipo.toLowerCase().replace(/\s+/g, '-');
+            return `${backendUrl}/uploads/${folderName}/${imagePath}`;
+        } else {
+            // Opción B: Carpeta genérica
+            return `${backendUrl}/uploads/products/${imagePath}`;
+        }
     }
     
     return '/images/placeholder-product.jpg';
-  };
+};
 
   // Cargar producto
   useEffect(() => {

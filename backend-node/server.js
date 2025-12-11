@@ -9,6 +9,10 @@ const SERVER_BASE = process.env.NODE_ENV === 'production'
   ? 'https://proyecto-herramientas-de-desarrollo-1.onrender.com'
   : 'http://localhost:5000';
 
+// URLs fijas para ambos entornos
+const LOCAL_URL = 'http://localhost:5000';
+const PRODUCTION_URL = 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+
 // Middlewares PRIMERO
 app.use(cors({
     origin: ["http://localhost:3000", "https://proyecto-herramientas-de-desarrollo.onrender.com"],
@@ -31,6 +35,18 @@ const mapCollectionToFolder = (collectionType) => {
         'bestsellers': 'best-sellers'
     };
     return mapping[collectionType] || 'sea-collection';
+};
+
+// Función para generar URLs dinámicas con AMBAS opciones
+const generateImageUrls = (filename, folder = '', collection = '') => {
+    const pathSegment = collection ? `${collection}/${filename}` : `${folder}/${filename}`;
+    
+    return {
+        localUrl: `${LOCAL_URL}/uploads/${pathSegment}`,
+        productionUrl: `${PRODUCTION_URL}/uploads/${pathSegment}`,
+        currentUrl: `${SERVER_BASE}/uploads/${pathSegment}`,
+        path: `/uploads/${pathSegment}`
+    };
 };
 
 // SOLUCIÓN: Configurar multer sin destination fija
@@ -186,6 +202,12 @@ app.get('/uploads/:collection/:filename', (req, res) => {
 app.get('/', (req, res) => {
     res.json({ 
         message: 'Servidor funcionando correctamente',
+        environment: process.env.NODE_ENV || 'development',
+        serverBase: SERVER_BASE,
+        urls: {
+            local: LOCAL_URL,
+            production: PRODUCTION_URL
+        },
         endpoints: {
             upload: 'POST /api/upload-product-image',
             upload_header: 'POST /api/upload-header-image',
@@ -202,7 +224,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// RUTA CORREGIDA - Manejo manual del archivo
+// RUTA CORREGIDA - Manejo manual del archivo CON AMBAS URLs
 app.post('/api/upload-product-image', upload.single('productImage'), (req, res) => {
     try {
         console.log('📤 Upload recibido - Body:', req.body);
@@ -251,15 +273,17 @@ app.post('/api/upload-product-image', upload.single('productImage'), (req, res) 
             });
         }
 
-        const imageUrl = `${SERVER_BASE}/uploads/${collection}/${filename}`;
-        const imagePath = `/uploads/${collection}/${filename}`;
+        // Generar TODAS las URLs
+        const urls = generateImageUrls(filename, '', collection);
 
         console.log('✅ Archivo subido exitosamente:', {
             filename: filename,
             collectionTypeFromFrontend: req.body.collectionType,
             finalCollectionFolder: collection,
-            imageUrl: imageUrl,
-            path: imagePath,
+            localUrl: urls.localUrl,
+            productionUrl: urls.productionUrl,
+            currentUrl: urls.currentUrl,
+            path: urls.path,
             fullPath: filePath
         });
 
@@ -268,9 +292,14 @@ app.post('/api/upload-product-image', upload.single('productImage'), (req, res) 
             message: 'Archivo subido exitosamente',
             filename: filename,
             collection: collection,
-            imageUrl: imageUrl,
-            path: imagePath,
-            fullPath: filePath
+            // URL principal (actual)
+            imageUrl: urls.currentUrl,
+            // AMBAS URLs para compatibilidad
+            localUrl: urls.localUrl,
+            productionUrl: urls.productionUrl,
+            path: urls.path,
+            fullPath: filePath,
+            uploadedAt: new Date().toISOString()
         });
 
     } catch (error) {
@@ -282,7 +311,7 @@ app.post('/api/upload-product-image', upload.single('productImage'), (req, res) 
     }
 });
 
-// RUTAS CORREGIDAS PARA HEADER IMAGES - BUSCAN IMÁGENES REALES
+// RUTAS CORREGIDAS PARA HEADER IMAGES - BUSCAN IMÁGENES REALES CON AMBAS URLs
 app.get('/api/sea-collection-header-image', (req, res) => {
     const headerPath = path.join(__dirname, 'uploads', 'headers', 'sea-collection');
     
@@ -313,13 +342,17 @@ app.get('/api/sea-collection-header-image', (req, res) => {
 
     // Tomar la imagen más reciente
     const latestImage = files[0];
-    const imageUrl = `${SERVER_BASE}/uploads/headers/sea-collection/${latestImage}`;
+    const urls = generateImageUrls(latestImage, 'headers/sea-collection');
 
     console.log('🌊 Header image encontrada para Sea Collection:', latestImage);
 
     res.json({
         success: true,
-        imageUrl: imageUrl,
+        // URL principal (actual)
+        imageUrl: urls.currentUrl,
+        // AMBAS URLs
+        localUrl: urls.localUrl,
+        productionUrl: urls.productionUrl,
         filename: latestImage,
         message: 'Imagen de header para Sea Collection'
     });
@@ -355,13 +388,15 @@ app.get('/api/matarita-collection-header-image', (req, res) => {
 
     // Tomar la imagen más reciente
     const latestImage = files[0];
-    const imageUrl = `${SERVER_BASE}/uploads/headers/matarita-collection/${latestImage}`;
+    const urls = generateImageUrls(latestImage, 'headers/matarita-collection');
 
     console.log('🍹 Header image encontrada para Matarita Collection:', latestImage);
 
     res.json({
         success: true,
-        imageUrl: imageUrl,
+        imageUrl: urls.currentUrl,
+        localUrl: urls.localUrl,
+        productionUrl: urls.productionUrl,
         filename: latestImage,
         message: 'Imagen de header para Matarita Collection'
     });
@@ -397,13 +432,15 @@ app.get('/api/best-sellers-header-image', (req, res) => {
 
     // Tomar la imagen más reciente
     const latestImage = files[0];
-    const imageUrl = `${SERVER_BASE}/uploads/headers/best-sellers/${latestImage}`;
+    const urls = generateImageUrls(latestImage, 'headers/best-sellers');
 
     console.log('⭐ Header image encontrada para Best Sellers:', latestImage);
 
     res.json({
         success: true,
-        imageUrl: imageUrl,
+        imageUrl: urls.currentUrl,
+        localUrl: urls.localUrl,
+        productionUrl: urls.productionUrl,
         filename: latestImage,
         message: 'Imagen de header para Best Sellers'
     });
@@ -438,60 +475,19 @@ app.get('/api/matarita-header-image', (req, res) => {
     }
 
     const latestImage = files[0];
-    const imageUrl = `${SERVER_BASE}/uploads/headers/matarita-collection/${latestImage}`;
+    const urls = generateImageUrls(latestImage, 'headers/matarita-collection');
 
     res.json({
         success: true,
-        imageUrl: imageUrl,
+        imageUrl: urls.currentUrl,
+        localUrl: urls.localUrl,
+        productionUrl: urls.productionUrl,
         filename: latestImage,
         message: 'Imagen de header para Matarita Collection'
     });
 });
 
-// Ruta para subir imágenes de header (genérica)
-app.post('/api/upload-header-image', upload.single('headerImage'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ 
-                success: false,
-                error: 'No se subió ningún archivo' 
-            });
-        }
-
-        const collectionType = req.body.collectionType || 'general';
-        const collection = mapCollectionToFolder(collectionType);
-        
-        const uploadPath = path.join(__dirname, 'uploads', 'headers', collection);
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const filename = 'header-' + uniqueSuffix + path.extname(req.file.originalname);
-        const filePath = path.join(uploadPath, filename);
-
-        fs.writeFileSync(filePath, req.file.buffer);
-
-        const imageUrl = `${SERVER_BASE}/uploads/headers/${collection}/${filename}`;
-
-        res.json({
-            success: true,
-            message: 'Imagen de header subida exitosamente',
-            imageUrl: imageUrl,
-            filename: filename,
-            collection: collection
-        });
-
-    } catch (error) {
-        console.error('❌ Error al subir imagen de header:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'Error al subir imagen de header' 
-        });
-    }
-});
-
-// Función helper MEJORADA para subir imágenes de header
+// Función helper MEJORADA para subir imágenes de header CON AMBAS URLs
 function uploadHeaderImage(req, res, collectionType) {
     try {
         console.log(`📤 Subiendo header image para ${collectionType}:`, req.file ? `Sí - ${req.file.originalname}` : 'No');
@@ -538,16 +534,23 @@ function uploadHeaderImage(req, res, collectionType) {
 
         fs.writeFileSync(filePath, req.file.buffer);
 
-        const imageUrl = `${SERVER_BASE}/uploads/headers/${collection}/${filename}`;
+        // Generar TODAS las URLs
+        const urls = generateImageUrls(filename, `headers/${collection}`);
 
-        console.log(`✅ Header image subida exitosamente para ${collectionType}:`, imageUrl);
+        console.log(`✅ Header image subida exitosamente para ${collectionType}:`, urls);
 
         res.json({
             success: true,
             message: `Imagen de header para ${collectionType} subida exitosamente`,
-            imageUrl: imageUrl,
+            // URL principal (actual)
+            imageUrl: urls.currentUrl,
+            // AMBAS URLs
+            localUrl: urls.localUrl,
+            productionUrl: urls.productionUrl,
             filename: filename,
-            collection: collection
+            collection: collection,
+            path: urls.path,
+            uploadedAt: new Date().toISOString()
         });
 
     } catch (error) {
@@ -558,6 +561,54 @@ function uploadHeaderImage(req, res, collectionType) {
         });
     }
 }
+
+// Ruta para subir imágenes de header (genérica) CON AMBAS URLs
+app.post('/api/upload-header-image', upload.single('headerImage'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false,
+                error: 'No se subió ningún archivo' 
+            });
+        }
+
+        const collectionType = req.body.collectionType || 'general';
+        const collection = mapCollectionToFolder(collectionType);
+        
+        const uploadPath = path.join(__dirname, 'uploads', 'headers', collection);
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = 'header-' + uniqueSuffix + path.extname(req.file.originalname);
+        const filePath = path.join(uploadPath, filename);
+
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Generar TODAS las URLs
+        const urls = generateImageUrls(filename, `headers/${collection}`);
+
+        res.json({
+            success: true,
+            message: 'Imagen de header subida exitosamente',
+            imageUrl: urls.currentUrl,
+            localUrl: urls.localUrl,
+            productionUrl: urls.productionUrl,
+            filename: filename,
+            collection: collection,
+            path: urls.path,
+            uploadedAt: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ Error al subir imagen de header:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error al subir imagen de header' 
+        });
+    }
+});
 
 // Rutas específicas para subir headers de cada colección
 app.post('/api/upload-sea-collection-header-image', upload.single('headerImage'), (req, res) => {
@@ -572,7 +623,7 @@ app.post('/api/upload-best-sellers-header-image', upload.single('headerImage'), 
     uploadHeaderImage(req, res, 'BestSellers');
 });
 
-// Ruta para obtener información de archivos
+// Ruta para obtener información de archivos CON AMBAS URLs
 app.get('/files', (req, res) => {
     try {
         const collections = ['categories', 'sea-collection', 'matarita-collection', 'best-sellers'];
@@ -585,13 +636,20 @@ app.get('/files', (req, res) => {
                 filesInfo[collection] = files.map(file => {
                     const filePath = path.join(collectionPath, file);
                     const stats = fs.statSync(filePath);
+                    const urls = generateImageUrls(file, '', collection);
+                    
                     return {
                         filename: file,
-                        url: `${SERVER_BASE}/uploads/${collection}/${file}`,
-                        imageUrl: `${SERVER_BASE}/uploads/${collection}/${file}`,
-                        path: `/uploads/${collection}/${file}`,
+                        // URL principal (actual)
+                        url: urls.currentUrl,
+                        imageUrl: urls.currentUrl,
+                        // AMBAS URLs
+                        localUrl: urls.localUrl,
+                        productionUrl: urls.productionUrl,
+                        path: urls.path,
                         size: stats.size,
-                        created: stats.birthtime
+                        created: stats.birthtime,
+                        modified: stats.mtime
                     };
                 });
             }
@@ -605,7 +663,7 @@ app.get('/files', (req, res) => {
     }
 });
 
-// Ruta para verificar que una imagen existe
+// Ruta para verificar que una imagen existe CON AMBAS URLs
 app.get('/check-image/:collection/:filename', (req, res) => {
     const { collection, filename } = req.params;
     
@@ -620,12 +678,20 @@ app.get('/check-image/:collection/:filename', (req, res) => {
     
     if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
+        const urls = generateImageUrls(filename, '', actualCollection);
+        
         res.json({ 
             exists: true,
-            url: `${SERVER_BASE}/uploads/${actualCollection}/${filename}`,
-            imageUrl: `${SERVER_BASE}/uploads/${actualCollection}/${filename}`,
+            // URL principal (actual)
+            url: urls.currentUrl,
+            imageUrl: urls.currentUrl,
+            // AMBAS URLs
+            localUrl: urls.localUrl,
+            productionUrl: urls.productionUrl,
+            path: urls.path,
             size: stats.size,
-            created: stats.birthtime
+            created: stats.birthtime,
+            modified: stats.mtime
         });
     } else {
         res.status(404).json({ 
@@ -712,6 +778,9 @@ const PORT = 5000;
 app.listen(PORT, () => {
     console.log('=================================');
     console.log(`🚀 Servidor ejecutándose en ${SERVER_BASE}`);
+    console.log(`🌐 Local URL: ${LOCAL_URL}`);
+    console.log(`🌐 Production URL: ${PRODUCTION_URL}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log('=================================');
     console.log('📁 Directorios creados:');
     console.log('   - uploads/categories/');
@@ -728,7 +797,7 @@ app.listen(PORT, () => {
     console.log('   MataritaCollection → matarita-collection');
     console.log('   BestSellers → best-sellers');
     console.log('=================================');
-    console.log('📤 Endpoints disponibles:');
+    console.log('📤 Endpoints disponibles (con URLs duales):');
     console.log('   POST /api/upload-product-image - Subir imágenes de productos');
     console.log('   POST /api/upload-header-image - Subir imágenes de header genéricas');
     console.log('   POST /api/upload-sea-collection-header-image - Subir header Sea Collection');
@@ -739,6 +808,11 @@ app.listen(PORT, () => {
     console.log('   GET  /api/best-sellers-header-image - Obtener header Best Sellers');
     console.log('   GET  /api/matarita-header-image - Ruta alternativa Matarita Collection');
     console.log('   GET  /files - Listar archivos');
+    console.log('=================================');
+    console.log('💡 NOTA: Todas las respuestas incluyen:');
+    console.log('   - imageUrl (URL actual según entorno)');
+    console.log('   - localUrl (siempre http://localhost:5000)');
+    console.log('   - productionUrl (siempre https://proyecto-herramientas-de-desarrollo-1.onrender.com)');
     console.log('=================================');
 });
 

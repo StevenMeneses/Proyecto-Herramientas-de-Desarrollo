@@ -54,17 +54,27 @@
             try {
                 log('🔄 Enviando login simple...');
                 
-                const response = await fetch('http://localhost:8080/api/auth/simple-login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include', // IMPORTANTE para sesiones
-                    body: JSON.stringify({
-                        email: email,
-                        contrasena: password
-                    })
-                });
+                // Detectar si estamos en localhost o en producción (Render)
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// Configurar URLs dinámicas
+const backendUrl = isLocalhost 
+    ? 'http://localhost:8080' 
+    : 'https://proyecto-herramientas-de-desarrollo-3.onrender.com';
+
+// Realizar la petición con la URL dinámica
+const response = await fetch(`${backendUrl}/api/auth/simple-login`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    credentials: 'include', // IMPORTANTE para sesiones
+    body: JSON.stringify({
+        email: email,
+        contrasena: password
+    })
+});
                 
                 const data = await response.json();
                 log({
@@ -82,10 +92,20 @@
             try {
                 log('🔄 Verificando sesión...');
                 
-                const response = await fetch('http://localhost:8080/api/auth/session-status', {
-                    method: 'GET',
-                    credentials: 'include' // IMPORTANTE para sesiones
-                });
+                // Detectar entorno
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// URL dinámica del backend
+const backendUrl = isLocalhost 
+    ? 'http://localhost:8080' 
+    : 'https://proyecto-herramientas-de-desarrollo-3.onrender.com';
+
+// Realizar la petición
+const response = await fetch(`${backendUrl}/api/auth/session-status`, {
+    method: 'GET',
+    credentials: 'include'
+});
                 
                 const data = await response.json();
                 log({
@@ -103,10 +123,20 @@
             try {
                 log('🔄 Probando API usuario...');
                 
-                const response = await fetch('http://localhost:8080/api/usuario/datos', {
-                    method: 'GET',
-                    credentials: 'include' // IMPORTANTE para sesiones
-                });
+                // Detectar entorno
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// URL dinámica del backend
+const backendUrl = isLocalhost 
+    ? 'http://localhost:8080' 
+    : 'https://proyecto-herramientas-de-desarrollo-3.onrender.com';
+
+// Realizar la petición
+const response = await fetch(`${backendUrl}/api/usuario/datos`, {
+    method: 'GET',
+    credentials: 'include'
+});
                 
                 if (response.headers.get('content-type')?.includes('application/json')) {
                     const data = await response.json();

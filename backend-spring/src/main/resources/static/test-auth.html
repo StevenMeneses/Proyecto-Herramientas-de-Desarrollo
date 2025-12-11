@@ -181,14 +181,28 @@
             try {
                 log('crossOriginResult', 'Simulando llamada cross-origin desde localhost:3000...', 'info');
                 
-                const response = await fetch('http://localhost:8080/api/usuario/datos', {
-                    method: 'GET',
-                    credentials: 'include', // ← CRÍTICO para cross-origin
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Origin': 'http://localhost:3000' // Simula el origen de React
-                    }
-                });
+                // Detectar si estamos en localhost o en producción (Render)
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// Configurar URLs según el entorno
+const apiBaseUrl = isLocalhost 
+    ? 'http://localhost:8080' 
+    : 'https://proyecto-herramientas-de-desarrollo-3.onrender.com';
+
+const frontendOrigin = isLocalhost 
+    ? 'http://localhost:3000' 
+    : 'https://proyecto-herramientas-de-desarrollo.onrender.com';
+
+// Realizar la petición con las URLs dinámicas
+const response = await fetch(`${apiBaseUrl}/api/usuario/datos`, {
+    method: 'GET',
+    credentials: 'include', // ← CRÍTICO para cross-origin
+    headers: {
+        'Content-Type': 'application/json',
+        'Origin': frontendOrigin // Usar origen dinámico
+    }
+});
                 
                 const data = await response.json();
                 

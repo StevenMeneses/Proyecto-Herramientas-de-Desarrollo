@@ -107,10 +107,20 @@ const GestionCollection = () => {
         file: file.name 
       });
 
-      const response = await fetch('http://localhost:5000/api/upload-product-image', {
-        method: 'POST',
-        body: formData,
-      });
+      // Detectar si estamos en localhost o en producción (Render)
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// Configurar URL del backend dinámicamente
+const backendUrl = isLocalhost 
+    ? 'http://localhost:5000' 
+    : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+
+// Realizar la petición con la URL dinámica
+const response = await fetch(`${backendUrl}/api/upload-product-image`, {
+    method: 'POST',
+    body: formData,
+});
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -133,27 +143,41 @@ const GestionCollection = () => {
   }, []);
 
   // Función para obtener imagen - MEJORADA
-  const obtenerImagen = useCallback((imagePath, tipo) => {
+ const obtenerImagen = useCallback((imagePath, tipo) => {
     if (!imagePath) return '/images/placeholder-product.jpg';
     
-    // Si ya es una URL completa del backend, devuélvela directamente
-    if (imagePath.startsWith('http://localhost:5000')) {
-      return imagePath;
+    // Determinar la URL base según el entorno
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+    
+    const backendUrl = isLocalhost 
+        ? 'http://localhost:5000' 
+        : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+    
+    // Si ya es una URL completa del backend
+    if (imagePath.startsWith('http://localhost:5000') || 
+        imagePath.startsWith('https://proyecto-herramientas-de-desarrollo-1.onrender.com')) {
+        
+        // Si estamos en producción pero la URL tiene localhost, corregirla
+        if (!isLocalhost && imagePath.includes('localhost:5000')) {
+            return imagePath.replace('http://localhost:5000', backendUrl);
+        }
+        return imagePath;
     }
     
     // Si es solo el path (ej: /uploads/sea-collection/filename.png)
     if (imagePath.startsWith('/uploads/')) {
-      return `http://localhost:5000${imagePath}`;
+        return `${backendUrl}${imagePath}`;
     }
     
     // Si es solo el nombre del archivo, construir la URL con el mapeo correcto
     if (imagePath && !imagePath.startsWith('http') && !imagePath.startsWith('/')) {
-      const folderName = mapTipoToFolderName(tipo);
-      return `http://localhost:5000/uploads/${folderName}/${imagePath}`;
+        const folderName = mapTipoToFolderName(tipo);
+        return `${backendUrl}/uploads/${folderName}/${imagePath}`;
     }
     
     return '/images/placeholder-product.jpg';
-  }, []);
+}, []);
 
   // Cargar TODOS los productos de TODAS las colecciones
   const loadAllProductsFromStorage = useCallback(() => {

@@ -18,15 +18,61 @@ const SeaCollection = () => {
   });
   const [uploading, setUploading] = useState(false);
 
+  // Función para obtener URL del backend dinámica
+  const getBackendUrl = () => {
+    return window.location.hostname.includes('localhost')
+      ? 'http://localhost:5000'
+      : 'https://proyecto-herramientas-de-desarrollo-1.onrender.com';
+  };
+
+  // Función para obtener imagen - ACTUALIZADA PARA USAR BACKEND DINÁMICO
+  const obtenerImagen = (imagePath) => {
+    if (!imagePath) return '/images/placeholder-product.jpg';
+    
+    const backendUrl = getBackendUrl();
+    
+    // Si ya es una URL completa del backend
+    if (imagePath.startsWith('http://localhost:5000') || 
+        imagePath.startsWith('https://proyecto-herramientas-de-desarrollo-1.onrender.com')) {
+      
+      // Si estamos en producción pero la URL tiene localhost, corregirla
+      if (imagePath.includes('localhost:5000') && !window.location.hostname.includes('localhost')) {
+        return imagePath.replace('http://localhost:5000', backendUrl);
+      }
+      return imagePath;
+    }
+    
+    // Si es solo el path (ej: /uploads/sea-collection/filename.png)
+    if (imagePath.startsWith('/uploads/')) {
+      return `${backendUrl}${imagePath}`;
+    }
+    
+    // Para compatibilidad con localStorage de imágenes
+    try {
+      const imagenesGuardadas = JSON.parse(localStorage.getItem('sea-collection_images') || '{}');
+      if (imagenesGuardadas[imagePath]) {
+        return imagenesGuardadas[imagePath];
+      }
+    } catch (error) {
+      console.error('Error al leer localStorage:', error);
+    }
+    
+    return '/images/placeholder-product.jpg';
+  };
+
   // Cargar imagen del header desde el backend - RUTA ESPECÍFICA
   useEffect(() => {
     const loadHeaderImage = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/sea-collection-header-image');
+        const backendUrl = getBackendUrl();
+        const response = await fetch(`${backendUrl}/api/sea-collection-header-image`);
+        
         if (response.ok) {
           const data = await response.json();
           if (data.imageUrl) {
-            setHeaderImage(data.imageUrl);
+            // Usar obtenerImagen para normalizar la URL
+            const correctedImageUrl = obtenerImagen(data.imageUrl);
+            setHeaderImage(correctedImageUrl);
           }
         }
       } catch (error) {
@@ -52,7 +98,13 @@ const SeaCollection = () => {
         stock: producto.stock
       }));
       
-      setProducts(productosMapeados);
+      // Corregir las URLs de las imágenes de los productos
+      const productosCorregidos = productosMapeados.map(producto => ({
+        ...producto,
+        imagenUrl: producto.imagenUrl ? obtenerImagen(producto.imagenUrl) : null
+      }));
+      
+      setProducts(productosCorregidos);
     } else {
       setProducts([]);
     }
@@ -92,14 +144,19 @@ const SeaCollection = () => {
       formData.append('headerImage', file);
 
       try {
-        const response = await fetch('http://localhost:5000/api/upload-sea-collection-header-image', {
+        const backendUrl = getBackendUrl();
+        const response = await fetch(`${backendUrl}/api/upload-sea-collection-header-image`, {
           method: 'POST',
           body: formData,
         });
 
         if (response.ok) {
           const result = await response.json();
-          setHeaderImage(result.imageUrl);
+          
+          // Usar obtenerImagen para normalizar la URL recibida
+          const correctedImageUrl = obtenerImagen(result.imageUrl);
+          setHeaderImage(correctedImageUrl);
+          
           alert('Imagen subida exitosamente');
         } else {
           throw new Error('Error al subir la imagen');
@@ -110,16 +167,6 @@ const SeaCollection = () => {
       } finally {
         setUploading(false);
       }
-    }
-  };
-
-  const obtenerImagen = (imagePath) => {
-    if (!imagePath) return '/images/placeholder-product.jpg';
-    try {
-      const imagenesGuardadas = JSON.parse(localStorage.getItem('sea-collection_images') || '{}');
-      return imagenesGuardadas[imagePath] || imagePath;
-    } catch (error) {
-      return '/images/placeholder-product.jpg';
     }
   };
 
@@ -153,7 +200,7 @@ const SeaCollection = () => {
   return (
     <div className="sea-collection-container">
       <div className="hero-image-section">
-      <div className="hero-image-container">
+        <div className="hero-image-container">
           {headerImage ? (
             <img src={headerImage} alt="Sea Collection Header" className="hero-image" />
           ) : (
@@ -284,7 +331,7 @@ const SeaCollection = () => {
         <div className="products-grid">
           {filteredProducts.map(product => (
             <div key={product.id} className="product-card">
-             <div 
+              <div 
                 className="product-image-container"
                 onClick={() => navigate(`/product/SeaCollection/${product.id}`)}
                 style={{cursor: 'pointer'}}

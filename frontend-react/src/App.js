@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { useNavigate } from 'react-router-dom';
-
-
 
 // Importar páginas
 import Anillos from './pages/Anillos';
@@ -26,7 +23,6 @@ import BestSellers from './pages/BestSellers';
 import GestionCollection from './components/GestionCollection';
 import ProductDetail from './components/ProductDetail';
 
-
 // Importar contextos
 import { CartProvider, getCartCountFromStorage } from './context/CartContext';
 import { FavoritesProvider, getFavoritesCountFromStorage } from './context/FavoriteContext';
@@ -41,344 +37,8 @@ const API_BASE = window.location.hostname.includes('render.com')
   ? 'https://proyecto-herramientas-de-desarrollo-3.onrender.com'
   : 'http://localhost:8080';
 
-function App() {
-  
-  const [usuario, setUsuario] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
-  const [isShopOpen, setIsShopOpen] = useState(false);
-  const [userRole, setUserRole] = useState(0);
-
-  // Función de utilidad para verificar roles
-  const hasRole = (requiredRole) => {
-    return userRole >= requiredRole;
-  };
-
-  // Función para obtener nombre del rol
-  const getRoleName = (roleId) => {
-    switch(roleId) {
-      case 1: return 'ADMINISTRADOR';
-      case 2: return 'VENDEDOR';
-      case 3: return 'CLIENTE';
-      default: return 'SIN AUTENTICAR';
-    }
-  };
-
-  // Log del rol actual cuando cambie
-  useEffect(() => {
-    console.log('🎭 Rol actual actualizado:', {
-      userRole: userRole,
-      roleName: getRoleName(userRole),
-      canEdit: userRole === 1,
-      canManageProducts: userRole === 1 || userRole === 2,
-      isAuthenticated: userRole > 0
-    });
-  }, [userRole]);
-
-  // Función para debug manual
-  const debugRoleInfo = () => {
-    alert(`
-🎭 INFORMACIÓN DE ROL ACTUAL:
-
-📋 Usuario: ${usuario ? `${usuario.nombre} (${usuario.email})` : 'No autenticado'}
-🎯 Rol ID: ${userRole}
-📝 Rol Nombre: ${getRoleName(userRole)}
-
-🔐 PERMISOS:
-${userRole === 1 ? '✅ ADMINISTRADOR - Puede editar todo' : ''}
-${userRole === 2 ? '✅ VENDEDOR - Puede gestionar ventas' : ''}
-${userRole === 3 ? '✅ CLIENTE - Cliente normal' : ''}
-${userRole === 0 ? '❌ SIN PERMISOS - No autenticado' : ''}
-
-💾 STORAGE:
-sessionStorage: ${sessionStorage.getItem('userRole') || 'null'}
-localStorage: ${localStorage.getItem('userRole') || 'null'}
-    `);
-  };
-
-
-  // ESTADO PARA NEW COLLECTION
-  const [setNewCollectionData] = useState({
-    title: "NEW COLLECTION",
-    subtitle: "Lovelay with a sad soul. Art you carry with you.",
-    buttonText: "Buy now",
-    description: "For over 3 years, we've handcrafted bronze, sterling silver, and TK gold jewelry in our Lima studio using the ancient art of lost-wax casting. Each piece is inspired by our local landscape, captivating culture, and the beauty of being human.",
-    images: [
-      { id: 1, url: null, title: 'Sea Conchitas', alt: 'Sea Conchitas Collection' },
-      { id: 2, url: null, title: 'Wild Flowers', alt: 'Wild Flowers Collection' },
-      { id: 3, url: null, title: 'Interplanets', alt: 'Interplanets Collection' }
-    ]
-  });
-
-  // ESTADO PARA MARLY COLLECTIONS
-  const [marlyCollectionsData, setMarlyCollectionsData] = useState({
-    bestSellers: [
-      { id: 1, url: null, title: 'Best Sellers', alt: 'Best Seller' }
-    ],
-    seaCollection: [
-      { id: 1, url: null, title: 'Sea Collection', alt: 'Sea Collection' }
-
-    ],
-    mataritaCollection: [
-      { id: 1, url: null, title: 'Matarita Collection', alt: 'Matarita Collection' },
-    ],
-    oceanBlueImage: { id: 1, url: null, title: 'Ocean Blue Monk Tree', alt: 'Ocean Blue Monk Tree Look' }
-  });
-
-  // ESTADO PARA MEET THE MAKER
-  const [meetTheMakerData, setMeetTheMakerData] = useState({
-    title: "Meet the Maker",
-    subtitle: "MEETMARLY",
-    shopInPerson: "AT THE VOLUNY SHOPPING",
-    address: "AC 30th to Nutrition (SNAH) Scan Miguel TRIKOS",
-    phones: [
-      "+33 866 368 145",
-      "+33 866 368 245 - Saturday from 18 AM - 5 PM"
-    ],
-    images: [
-      { id: 1, url: null, title: 'Marly Workshop', alt: 'Marly en su taller' },
-      { id: 2, url: null, title: 'Artisan Process', alt: 'Proceso artesanal' },
-      { id: 3, url: null, title: 'Finished Products', alt: 'Productos terminados' }
-    ]
-  });
-
-  useEffect(() => {
-    // Actualizar badges cada segundo
-    /*const interval = setInterval(() => {
-      setBadgeUpdate(prev => prev + 1);
-    }, 1000);
-
-    // Cargar datos guardados*/
-    loadSavedData();
-
-    // return () => clearInterval(interval);
-  }, []);
-
-  // Cargar todos los datos guardados
-  const loadSavedData = () => {
-    // Cargar rol de usuario
-    const role = parseInt(sessionStorage.getItem("userRole") || localStorage.getItem("userRole") || "0", 10);
-    setUserRole(role);
-
-    // Cargar datos de localStorage
-    const savedNewCollection = localStorage.getItem("newCollectionData");
-    const savedMarlyCollections = localStorage.getItem("marlyCollectionsData");
-    const savedMeetTheMaker = localStorage.getItem("meetTheMakerData");
-
-    if (savedNewCollection) {
-      try {
-        setNewCollectionData(JSON.parse(savedNewCollection));
-      } catch (error) {
-        console.error('Error cargando newCollectionData:', error);
-      }
-    }
-
-    if (savedMarlyCollections) {
-      try {
-        setMarlyCollectionsData(JSON.parse(savedMarlyCollections));
-      } catch (error) {
-        console.error('Error cargando marlyCollectionsData:', error);
-      }
-    }
-
-    if (savedMeetTheMaker) {
-      try {
-        setMeetTheMakerData(JSON.parse(savedMeetTheMaker));
-      } catch (error) {
-        console.error('Error cargando meetTheMakerData:', error);
-      }
-    }
-  };
-
-  // Cargar datos del usuario
-  useEffect(() => {
-    const fetchUsuario = async () => {
-      try {
-        console.log('🔍 Haciendo request a /api/usuario/datos');
-        
-        const response = await fetch(`${API_BASE}/api/usuario/datos`, {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-        
-        console.log('📨 Status:', response.status, response.statusText);
-        
-        const responseText = await response.text();
-        console.log('📝 Response:', responseText);
-        
-        if (response.ok) {
-          try {
-            const userData = JSON.parse(responseText);
-            console.log('✅ JSON parseado:', userData);
-            setUsuario(userData);
-            
-            // Actualizar el rol del usuario
-            if (userData.idRol) {
-              setUserRole(userData.idRol);
-              // Guardar en sessionStorage y localStorage para persistencia
-              sessionStorage.setItem("userRole", userData.idRol.toString());
-              localStorage.setItem("userRole", userData.idRol.toString());
-              
-              console.log('🎭 Rol de usuario establecido:', userData.idRol);
-              console.log('   - 1 = ADMIN, 2 = VENDEDOR, 3 = CLIENTE');
-            }
-          } catch (jsonError) {
-            console.error('❌ Error parseando JSON:', jsonError);
-          }
-        } else {
-          console.log('❌ Error HTTP:', response.status);
-          setUsuario(null);
-          setUserRole(0); // Sin permisos
-          sessionStorage.removeItem("userRole");
-          localStorage.removeItem("userRole");
-        }
-      } catch (error) {
-        console.error('💥 Error de red:', error);
-        setUsuario(null);
-        setUserRole(0); // Sin permisos
-        sessionStorage.removeItem("userRole");
-        localStorage.removeItem("userRole");
-      }
-    };
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('login') === 'success') {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      fetchUsuario();
-    } else {
-      fetchUsuario();
-    }
-  }, []);
-
-  // Función para activar input de imagen
-const triggerImageInput = (collectionType, imageId, userRole, navigate) => {
-  if (userRole === 1) {
-    const wantsToEdit = window.confirm('¿Quieres cambiar la imagen? Presiona "Cancelar" para entrar al vínculo.');
-
-    if (wantsToEdit) {
-      const inputId = `${collectionType}-upload-${imageId}`;
-      const fileInput = document.getElementById(inputId);
-      if (fileInput) {
-        fileInput.click();
-      }
-    } else {
-      // Navegar a la ruta correcta según la colección
-      switch(collectionType) {
-        case 'seacollection':
-          navigate('/SeaCollection');
-          break;
-        case 'matarita':
-          navigate('/MataritaCollection');
-          break;
-        case 'bestseller':
-          navigate('/BestSellers');
-          break;
-        case 'oceanblue':
-          navigate('/SeaCollection'); // o la ruta que corresponda
-          break;
-        default:
-          navigate('/');
-      }
-    }
-  } else {
-    // Para usuarios normales, también navegar a la ruta correcta
-    switch(collectionType) {
-      case 'seacollection':
-        navigate('/SeaCollection');
-        break;
-      case 'matarita':
-        navigate('/MataritaCollection');
-        break;
-      case 'bestseller':
-        navigate('/BestSellers');
-        break;
-      case 'oceanblue':
-        navigate('/SeaCollection'); // o la ruta que corresponda
-        break;
-      default:
-        navigate('/');
-    }
-  }
-};
-
-
-
-  // FUNCIONES PARA MARLY COLLECTIONS
-  const handleMarlyCollectionImageChange = (collectionType, imageId, event) => {
-    if (userRole !== 1) return;
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const updatedData = { ...marlyCollectionsData };
-        
-        if (collectionType === 'oceanBlueImage') {
-          updatedData.oceanBlueImage = { ...updatedData.oceanBlueImage, url: e.target.result };
-        } else {
-          updatedData[collectionType] = updatedData[collectionType].map(img => 
-            img.id === imageId ? { ...img, url: e.target.result } : img
-          );
-        }
-        
-        setMarlyCollectionsData(updatedData);
-        localStorage.setItem("marlyCollectionsData", JSON.stringify(updatedData));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // FUNCIONES PARA MEET THE MAKER
-  const handleMeetTheMakerImageChange = (imageId, event) => {
-    if (userRole !== 1) return;
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const updatedImages = meetTheMakerData.images.map(img => 
-          img.id === imageId ? { ...img, url: e.target.result } : img
-        );
-        const newData = { ...meetTheMakerData, images: updatedImages };
-        setMeetTheMakerData(newData);
-        localStorage.setItem("meetTheMakerData", JSON.stringify(newData));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-
-
-const handleLogout = async (e) => {
-  e.preventDefault();
-  if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-    try {
-      await fetch(`${API_BASE}/logout`, {  // ✅ Usa API_BASE para el logout
-        method: 'GET',
-        credentials: 'include'
-      });
-      
-      setUsuario(null);
-      setUserRole(0);
-      sessionStorage.removeItem("userRole");
-      localStorage.removeItem("userRole");
-      
-      // ✅ Redirige al FRONTEND, no al BACKEND
-      window.location.href = `${window.location.origin}/?logout=success`;
-      
-    } catch (error) {
-      console.error('Error durante el logout:', error);
-      // ✅ En caso de error también redirige al FRONTEND
-      window.location.href = window.location.origin;
-    }
-  }
-};
-
-  // COMPONENTE NEW COLLECTION ACTUALIZADO
-// COMPONENTE NEW COLLECTION SIMPLIFICADO
-const NewCollectionSection = () => {
+// COMPONENTE NEW COLLECTION SEPARADO
+const NewCollectionSection = ({ userRole }) => {
   // Estado para la imagen principal
   const [mainImage, setMainImage] = useState(() => {
     const saved = localStorage.getItem("newCollectionMainImage");
@@ -482,7 +142,8 @@ const NewCollectionSection = () => {
   );
 };
 
-const MostLovedSection = () => {  // ✅ Recibe userRole como prop
+// COMPONENTE MOST LOVED SEPARADO
+const MostLovedSection = ({ userRole }) => {
   // Estado específico para Most Loved
   const [mostLovedData, setMostLovedData] = useState(() => {
     const saved = localStorage.getItem("mostLovedData");
@@ -497,7 +158,7 @@ const MostLovedSection = () => {  // ✅ Recibe userRole como prop
 
   // Función para cambiar imágenes de Most Loved
   const handleMostLovedImageChange = (imageId, event) => {
-    if (userRole !== 1) return;  // ✅ Ahora userRole está disponible
+    if (userRole !== 1) return;
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -515,7 +176,7 @@ const MostLovedSection = () => {  // ✅ Recibe userRole como prop
 
   // Función para activar input de Most Loved
   const triggerMostLovedInput = (imageId) => {
-    if (userRole !== 1) return;  // ✅ Ahora userRole está disponible
+    if (userRole !== 1) return;
     const inputId = `mostloved-upload-${imageId}`;
     const fileInput = document.getElementById(inputId);
     if (fileInput) {
@@ -531,7 +192,7 @@ const MostLovedSection = () => {  // ✅ Recibe userRole como prop
           {mostLovedData.images.map((image) => (
             <div key={image.id} className="collection-item">
               <div 
-                className={`image-container ${userRole === 1 ? 'editable' : ''}`}  // ✅ Ahora funciona
+                className={`image-container ${userRole === 1 ? 'editable' : ''}`}
                 onClick={() => triggerMostLovedInput(image.id)}
               >
                 <div 
@@ -541,7 +202,7 @@ const MostLovedSection = () => {  // ✅ Recibe userRole como prop
                   }}
                 >
                   {!image.url && <span className="image-placeholder">{image.title}</span>}
-                  {userRole === 1 && (  // ✅ Ahora funciona
+                  {userRole === 1 && (
                     <div className="image-overlay">
                       <span className="edit-icon">📷 Editar</span>
                     </div>
@@ -564,8 +225,60 @@ const MostLovedSection = () => {  // ✅ Recibe userRole como prop
   );
 };
 
-const MarlyCollectionsSection = () => {
-  const navigate = useNavigate(); // ✅ useNavigate dentro del componente
+// COMPONENTE MARLY COLLECTIONS SEPARADO
+const MarlyCollectionsSection = ({ userRole, marlyCollectionsData, handleMarlyCollectionImageChange }) => {
+  const navigate = useNavigate();
+
+  // Función para activar input de imagen
+  const triggerImageInput = (collectionType, imageId) => {
+    if (userRole === 1) {
+      const wantsToEdit = window.confirm('¿Quieres cambiar la imagen? Presiona "Cancelar" para entrar al vínculo.');
+
+      if (wantsToEdit) {
+        const inputId = `${collectionType}-upload-${imageId}`;
+        const fileInput = document.getElementById(inputId);
+        if (fileInput) {
+          fileInput.click();
+        }
+      } else {
+        // Navegar a la ruta correcta según la colección
+        switch(collectionType) {
+          case 'bestseller':
+            navigate('/BestSellers');
+            break;
+          case 'seacollection':
+            navigate('/SeaCollection');
+            break;
+          case 'matarita':
+            navigate('/MataritaCollection');
+            break;
+          case 'oceanblue':
+            navigate('/SeaCollection');
+            break;
+          default:
+            navigate('/');
+        }
+      }
+    } else {
+      // Para usuarios normales, navegar a la ruta correcta
+      switch(collectionType) {
+        case 'bestseller':
+          navigate('/BestSellers');
+          break;
+        case 'seacollection':
+          navigate('/SeaCollection');
+          break;
+        case 'matarita':
+          navigate('/MataritaCollection');
+          break;
+        case 'oceanblue':
+          navigate('/SeaCollection');
+          break;
+        default:
+          navigate('/');
+      }
+    }
+  };
 
   return (
     <section className="marly-collections-section">
@@ -580,7 +293,7 @@ const MarlyCollectionsSection = () => {
           <div key={image.id} className="marly-collection-item">
             <div 
               className={`image-container ${userRole === 1 ? 'editable' : ''}`}
-              onClick={() => triggerImageInput('bestseller', image.id, userRole, navigate)}
+              onClick={() => triggerImageInput('bestseller', image.id)}
             >
               <div 
                 className="collection-image"
@@ -613,7 +326,7 @@ const MarlyCollectionsSection = () => {
           <div key={image.id} className="marly-collection-item">
             <div 
               className={`image-container ${userRole === 1 ? 'editable' : ''}`}
-              onClick={() => triggerImageInput('seacollection', image.id, userRole, navigate)}
+              onClick={() => triggerImageInput('seacollection', image.id)}
             >
               <div 
                 className="collection-image"
@@ -636,7 +349,6 @@ const MarlyCollectionsSection = () => {
                 style={{ display: 'none' }}
               />
             </div>
-            {/* TÍTULO DEBAJO DE LA IMAGEN */}
             <h3 className="collection-item-title">Sea Collection</h3>
           </div>
         ))}
@@ -646,7 +358,7 @@ const MarlyCollectionsSection = () => {
           <div key={image.id} className="marly-collection-item">
             <div 
               className={`image-container ${userRole === 1 ? 'editable' : ''}`}
-              onClick={() => triggerImageInput('matarita', image.id, userRole, navigate)}
+              onClick={() => triggerImageInput('matarita', image.id)}
             >
               <div 
                 className="collection-image"
@@ -669,7 +381,6 @@ const MarlyCollectionsSection = () => {
                 style={{ display: 'none' }}
               />
             </div>
-            {/* TÍTULO DEBAJO DE LA IMAGEN */}
             <h3 className="collection-item-title">Matarita Collection</h3>
           </div>
         ))}
@@ -681,7 +392,7 @@ const MarlyCollectionsSection = () => {
         <div className="look-container">
           <div 
             className={`ocean-blue-monk-tree ${userRole === 1 ? 'editable' : ''}`}
-            onClick={() => triggerImageInput('oceanblue', 1, userRole, navigate)}
+            onClick={() => triggerImageInput('oceanblue', 1)}
             style={{
               backgroundImage: marlyCollectionsData.oceanBlueImage.url 
                 ? `url(${marlyCollectionsData.oceanBlueImage.url})` 
@@ -708,24 +419,34 @@ const MarlyCollectionsSection = () => {
   );
 };
 
+// COMPONENTE MEET THE MAKER SEPARADO
+const MeetTheMakerSection = ({ userRole, meetTheMakerData, handleMeetTheMakerImageChange }) => {
+  const navigate = useNavigate();
 
-// COMPONENTE MEET THE MAKER - CORREGIDO (SIN TÍTULO DUPLICADO)
-  const MeetTheMakerSection = () => (
+  // Función para activar input de Meet The Maker
+  const triggerImageInput = (imageId) => {
+    if (userRole !== 1) return;
+    const inputId = `meetmaker-upload-${imageId}`;
+    const fileInput = document.getElementById(inputId);
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
+  return (
     <section className="meet-the-maker-section">
       <div className="meet-maker-container">
-        {/* SOLO UN ENCABEZADO - EL NUEVO ESTILO MARLY COLLECTIONS */}
         <div className="collections-header">
           <h2 className="collections-title">{meetTheMakerData.title}</h2>
         </div>
 
-        {/* PARTE 1: IMAGEN PRINCIPAL */}
         <div className="meet-maker-top">
           <div className="meet-maker-single-image">
             {meetTheMakerData.images.slice(0, 1).map((image) => (
               <div key={image.id} className="maker-image-item">
                 <div 
                   className={`image-container ${userRole === 1 ? 'editable' : ''}`}
-                  onClick={() => triggerImageInput('meetmaker', image.id)}
+                  onClick={() => triggerImageInput(image.id)}
                 >
                   <div 
                     className="first-maker-image"
@@ -754,20 +475,18 @@ const MarlyCollectionsSection = () => {
           </div>
         </div>
 
-        {/* PARTE 2: SHOP IN PERSON CON TÍTULO SECUNDARIO */}
         <div className="shop-in-person-section">
           <div className="shop-in-person-image">
             {meetTheMakerData.images.slice(1, 2).map((image) => (
               <div key={image.id} className="shop-image-item">
                 <div 
                   className={`image-container large-image ${userRole === 1 ? 'editable' : ''}`}
-                  onClick={() => triggerImageInput('meetmaker', image.id)}
+                  onClick={() => triggerImageInput(image.id)}
                 >
                   <div 
                     className="second-maker-image"
                     style={{
                       backgroundImage: image.url ? `url(${image.url})` : 'none',
-                      
                     }}
                   >
                     {!image.url && <span className="image-placeholder">Shop in Person</span>}
@@ -792,108 +511,383 @@ const MarlyCollectionsSection = () => {
       </div>
     </section>
   );
-  // FOOTER
-  const AppFooter = () => (
-    <footer className="app-footer">
-      <div className="footer-container">
-        <div className="footer-content">
-          {/* POLICY LINES */}
-          <div className="footer-section">
-            <h4>POLICY LINES</h4>
-            <ul>
-              <li><a href="/terms">Terms and Conditions</a></li>
-              <li><a href="/story">Our Story</a></li>
-              <li><a href="/delivery">Our delivery terms</a></li>
-              <li><a href="/join">Join us to get 15% off your first order</a></li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/contact">Contact Us</a></li>
-              <li className="email">contact@marly.com</li>
-              <li className="email">For wholesale inquiries: wholesale@marly.com</li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/wholesale">Drop us your email</a></li>
-              <li><a href="/shipping">Shipping Policy</a></li>
-              <li><a href="/returns">Returns - Exchange - Repairs</a></li>
-              <li><a href="/exchange">Exchange & Returns Policy</a></li>
-            </ul>
-          </div>
-          
-          {/* QUICK LINES */}
-          <div className="footer-section">
-            <h4>QUICK LINES</h4>
-            <ul>
-              <li><a href="/shop-all">SHOP ALL</a></li>
-              <li><a href="/best">Best over earphones 500</a></li>
-              <li><a href="/dose">Dose Losses</a></li>
-              <li><a href="/makeup">Makeup water? Keep all delivery</a></li>
-              <li><a href="/makeup-water">Makeup water?</a></li>
-            </ul>
-          </div>
-          
-          {/* CONTACT US */}
-          <div className="footer-section">
-            <h4>CONTACT US</h4>
-            <ul>
-              <li><a href="/contact">Our Story</a></li>
-              <li><a href="/team">Our team</a></li>
-              <li><a href="/delivery-info">Delivery information</a></li>
-              <li><a href="/join-insider">Join us to get 15% off your first order</a></li>
-              <li><a href="/privacy-policy">Privacy Policy</a></li>
-              <li><a href="/contact-form">Contact Us</a></li>
-              <li className="email">contact@marly.com</li>
-              <li className="email">For wholesale services and space: wholesale@marly.com</li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/email-list">Drop us your email</a></li>
-              <li><a href="/shipping-info">Shipping Policy</a></li>
-              <li><a href="/returns-info">Postage - Exchange - Repairs</a></li>
-              <li><a href="/exchange-info">Exchange & Repair Policy</a></li>
-            </ul>
-          </div>
-          
-          {/* BE AN INSIDER */}
-          <div className="footer-section">
-            <h4>BE AN INSIDER</h4>
-            <div className="newsletter">
-              <p>Join our newsletter for updates and offers</p>
-              <div className="newsletter-form">
-                <input type="email" placeholder="Enter your email" />
-                <button type="submit">Subscribe</button>
-              </div>
-              <div className="social-links">
-                <button className="social-btn" title="Instagram">
-                  <i className="fab fa-instagram"></i>
-                </button>
-                <button className="social-btn" title="Facebook">
-                  <i className="fab fa-facebook"></i>
-                </button>
-                <button className="social-btn" title="Pinterest">
-                  <i className="fab fa-pinterest"></i>
-                </button>
-                <button className="social-btn" title="TikTok">
-                  <i className="fab fa-tiktok"></i>
-                </button>
-              </div>
+};
+
+// COMPONENTE FOOTER
+const AppFooter = () => (
+  <footer className="app-footer">
+    <div className="footer-container">
+      <div className="footer-content">
+        {/* POLICY LINES */}
+        <div className="footer-section">
+          <h4>POLICY LINES</h4>
+          <ul>
+            <li><a href="/terms">Terms and Conditions</a></li>
+            <li><a href="/story">Our Story</a></li>
+            <li><a href="/delivery">Our delivery terms</a></li>
+            <li><a href="/join">Join us to get 15% off your first order</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/contact">Contact Us</a></li>
+            <li className="email">contact@marly.com</li>
+            <li className="email">For wholesale inquiries: wholesale@marly.com</li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/wholesale">Drop us your email</a></li>
+            <li><a href="/shipping">Shipping Policy</a></li>
+            <li><a href="/returns">Returns - Exchange - Repairs</a></li>
+            <li><a href="/exchange">Exchange & Returns Policy</a></li>
+          </ul>
+        </div>
+        
+        {/* QUICK LINES */}
+        <div className="footer-section">
+          <h4>QUICK LINES</h4>
+          <ul>
+            <li><a href="/shop-all">SHOP ALL</a></li>
+            <li><a href="/best">Best over earphones 500</a></li>
+            <li><a href="/dose">Dose Losses</a></li>
+            <li><a href="/makeup">Makeup water? Keep all delivery</a></li>
+            <li><a href="/makeup-water">Makeup water?</a></li>
+          </ul>
+        </div>
+        
+        {/* CONTACT US */}
+        <div className="footer-section">
+          <h4>CONTACT US</h4>
+          <ul>
+            <li><a href="/contact">Our Story</a></li>
+            <li><a href="/team">Our team</a></li>
+            <li><a href="/delivery-info">Delivery information</a></li>
+            <li><a href="/join-insider">Join us to get 15% off your first order</a></li>
+            <li><a href="/privacy-policy">Privacy Policy</a></li>
+            <li><a href="/contact-form">Contact Us</a></li>
+            <li className="email">contact@marly.com</li>
+            <li className="email">For wholesale services and space: wholesale@marly.com</li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/email-list">Drop us your email</a></li>
+            <li><a href="/shipping-info">Shipping Policy</a></li>
+            <li><a href="/returns-info">Postage - Exchange - Repairs</a></li>
+            <li><a href="/exchange-info">Exchange & Repair Policy</a></li>
+          </ul>
+        </div>
+        
+        {/* BE AN INSIDER */}
+        <div className="footer-section">
+          <h4>BE AN INSIDER</h4>
+          <div className="newsletter">
+            <p>Join our newsletter for updates and offers</p>
+            <div className="newsletter-form">
+              <input type="email" placeholder="Enter your email" />
+              <button type="submit">Subscribe</button>
+            </div>
+            <div className="social-links">
+              <button className="social-btn" title="Instagram">
+                <i className="fab fa-instagram"></i>
+              </button>
+              <button className="social-btn" title="Facebook">
+                <i className="fab fa-facebook"></i>
+              </button>
+              <button className="social-btn" title="Pinterest">
+                <i className="fab fa-pinterest"></i>
+              </button>
+              <button className="social-btn" title="TikTok">
+                <i className="fab fa-tiktok"></i>
+              </button>
             </div>
           </div>
         </div>
-        
-        <div className="footer-bottom">
-          <div className="footer-brand">
-            <h3>MARLY</h3>
-            <p>@ 2025 MARLY Handmade</p>
-          </div>
-          <div className="payment-methods">
-            <span>We accept:</span>
-            <i className="fab fa-cc-visa" title="Visa"></i>
-            <i className="fab fa-cc-mastercard" title="MasterCard"></i>
-            <i className="fab fa-cc-paypal" title="PayPal"></i>
-            <i className="fab fa-cc-apple-pay" title="Apple Pay"></i>
-          </div>
+      </div>
+      
+      <div className="footer-bottom">
+        <div className="footer-brand">
+          <h3>MARLY</h3>
+          <p>@ 2025 MARLY Handmade</p>
+        </div>
+        <div className="payment-methods">
+          <span>We accept:</span>
+          <i className="fab fa-cc-visa" title="Visa"></i>
+          <i className="fab fa-cc-mastercard" title="MasterCard"></i>
+          <i className="fab fa-cc-paypal" title="PayPal"></i>
+          <i className="fab fa-cc-apple-pay" title="Apple Pay"></i>
         </div>
       </div>
-    </footer>
-  );
+    </div>
+  </footer>
+);
 
- return (
+// COMPONENTE PRINCIPAL APP
+function App() {
+  const [usuario, setUsuario] = useState(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [userRole, setUserRole] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // ESTADO PARA NEW COLLECTION CORREGIDO
+  const [newCollectionData, setNewCollectionData] = useState({
+    title: "NEW COLLECTION",
+    subtitle: "Lovelay with a sad soul. Art you carry with you.",
+    buttonText: "Buy now",
+    description: "For over 3 years, we've handcrafted bronze, sterling silver, and TK gold jewelry in our Lima studio using the ancient art of lost-wax casting. Each piece is inspired by our local landscape, captivating culture, and the beauty of being human.",
+    images: [
+      { id: 1, url: null, title: 'Sea Conchitas', alt: 'Sea Conchitas Collection' },
+      { id: 2, url: null, title: 'Wild Flowers', alt: 'Wild Flowers Collection' },
+      { id: 3, url: null, title: 'Interplanets', alt: 'Interplanets Collection' }
+    ]
+  });
+
+  // ESTADO PARA MARLY COLLECTIONS
+  const [marlyCollectionsData, setMarlyCollectionsData] = useState({
+    bestSellers: [
+      { id: 1, url: null, title: 'Best Sellers', alt: 'Best Seller' }
+    ],
+    seaCollection: [
+      { id: 1, url: null, title: 'Sea Collection', alt: 'Sea Collection' }
+    ],
+    mataritaCollection: [
+      { id: 1, url: null, title: 'Matarita Collection', alt: 'Matarita Collection' },
+    ],
+    oceanBlueImage: { id: 1, url: null, title: 'Ocean Blue Monk Tree', alt: 'Ocean Blue Monk Tree Look' }
+  });
+
+  // ESTADO PARA MEET THE MAKER
+  const [meetTheMakerData, setMeetTheMakerData] = useState({
+    title: "Meet the Maker",
+    subtitle: "MEETMARLY",
+    shopInPerson: "AT THE VOLUNY SHOPPING",
+    address: "AC 30th to Nutrition (SNAH) Scan Miguel TRIKOS",
+    phones: [
+      "+33 866 368 145",
+      "+33 866 368 245 - Saturday from 18 AM - 5 PM"
+    ],
+    images: [
+      { id: 1, url: null, title: 'Marly Workshop', alt: 'Marly en su taller' },
+      { id: 2, url: null, title: 'Artisan Process', alt: 'Proceso artesanal' },
+      { id: 3, url: null, title: 'Finished Products', alt: 'Productos terminados' }
+    ]
+  });
+
+  // Función para obtener nombre del rol
+  const getRoleName = (roleId) => {
+    switch(roleId) {
+      case 1: return 'ADMINISTRADOR';
+      case 2: return 'VENDEDOR';
+      case 3: return 'CLIENTE';
+      default: return 'SIN AUTENTICAR';
+    }
+  };
+
+  // Log del rol actual cuando cambie
+  useEffect(() => {
+    console.log('🎭 Rol actual actualizado:', {
+      userRole: userRole,
+      roleName: getRoleName(userRole),
+      canEdit: userRole === 1,
+      canManageProducts: userRole === 1 || userRole === 2,
+      isAuthenticated: userRole > 0
+    });
+  }, [userRole]);
+
+  // Cargar datos guardados
+  useEffect(() => {
+    loadSavedData();
+  }, []);
+
+  // Cargar todos los datos guardados
+  const loadSavedData = () => {
+    try {
+      // Cargar rol de usuario
+      const role = parseInt(sessionStorage.getItem("userRole") || localStorage.getItem("userRole") || "0", 10);
+      setUserRole(role);
+
+      // Cargar datos de localStorage
+      const savedNewCollection = localStorage.getItem("newCollectionData");
+      const savedMarlyCollections = localStorage.getItem("marlyCollectionsData");
+      const savedMeetTheMaker = localStorage.getItem("meetTheMakerData");
+
+      if (savedNewCollection) {
+        setNewCollectionData(JSON.parse(savedNewCollection));
+      }
+
+      if (savedMarlyCollections) {
+        setMarlyCollectionsData(JSON.parse(savedMarlyCollections));
+      }
+
+      if (savedMeetTheMaker) {
+        setMeetTheMakerData(JSON.parse(savedMeetTheMaker));
+      }
+    } catch (error) {
+      console.error('Error cargando datos guardados:', error);
+    }
+  };
+
+  // Cargar datos del usuario - SOLO UNA VEZ
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 Haciendo request a /api/usuario/datos');
+        
+        const response = await fetch(`${API_BASE}/api/usuario/datos`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        console.log('📨 Status:', response.status, response.statusText);
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('✅ JSON parseado:', userData);
+          setUsuario(userData);
+          
+          // Actualizar el rol del usuario
+          if (userData.idRol) {
+            setUserRole(userData.idRol);
+            sessionStorage.setItem("userRole", userData.idRol.toString());
+            localStorage.setItem("userRole", userData.idRol.toString());
+            
+            console.log('🎭 Rol de usuario establecido:', userData.idRol);
+          }
+        } else {
+          console.log('❌ Error HTTP:', response.status);
+          handleLogout();
+        }
+      } catch (error) {
+        console.error('💥 Error de red:', error);
+        handleLogout();
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUsuario();
+  }, []);
+
+  // Función para debug manual
+  const debugRoleInfo = () => {
+    alert(`
+🎭 INFORMACIÓN DE ROL ACTUAL:
+
+📋 Usuario: ${usuario ? `${usuario.nombre} (${usuario.email})` : 'No autenticado'}
+🎯 Rol ID: ${userRole}
+📝 Rol Nombre: ${getRoleName(userRole)}
+
+🔐 PERMISOS:
+${userRole === 1 ? '✅ ADMINISTRADOR - Puede editar todo' : ''}
+${userRole === 2 ? '✅ VENDEDOR - Puede gestionar ventas' : ''}
+${userRole === 3 ? '✅ CLIENTE - Cliente normal' : ''}
+${userRole === 0 ? '❌ SIN PERMISOS - No autenticado' : ''}
+
+💾 STORAGE:
+sessionStorage: ${sessionStorage.getItem('userRole') || 'null'}
+localStorage: ${localStorage.getItem('userRole') || 'null'}
+    `);
+  };
+
+  // FUNCIONES PARA MARLY COLLECTIONS
+  const handleMarlyCollectionImageChange = (collectionType, imageId, event) => {
+    if (userRole !== 1) return;
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updatedData = { ...marlyCollectionsData };
+        
+        if (collectionType === 'oceanBlueImage') {
+          updatedData.oceanBlueImage = { ...updatedData.oceanBlueImage, url: e.target.result };
+        } else {
+          updatedData[collectionType] = updatedData[collectionType].map(img => 
+            img.id === imageId ? { ...img, url: e.target.result } : img
+          );
+        }
+        
+        setMarlyCollectionsData(updatedData);
+        localStorage.setItem("marlyCollectionsData", JSON.stringify(updatedData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // FUNCIONES PARA MEET THE MAKER
+  const handleMeetTheMakerImageChange = (imageId, event) => {
+    if (userRole !== 1) return;
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updatedImages = meetTheMakerData.images.map(img => 
+          img.id === imageId ? { ...img, url: e.target.result } : img
+        );
+        const newData = { ...meetTheMakerData, images: updatedImages };
+        setMeetTheMakerData(newData);
+        localStorage.setItem("meetTheMakerData", JSON.stringify(newData));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // LOGOUT MEJORADO Y FUNCIONAL - VERSIÓN ACTUALIZADA
+// LOGOUT MEJORADO - VERSIÓN QUE SIGUE LA REDIRECCIÓN DEL BACKEND
+const handleLogout = async (e) => {
+  if (e) e.preventDefault();
+  
+  if (!usuario || window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+    try {
+      console.log('🔐 Ejecutando logout hacia:', `${API_BASE}/api/logout`);
+      
+      const response = await fetch(`${API_BASE}/api/logout`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      console.log('📨 Respuesta del logout:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Logout exitoso:', result);
+        
+        // 1. Limpiar frontend
+        setUsuario(null);
+        setUserRole(0);
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // 2. Redirigir a la URL que indica el backend
+        if (result.redirectUrl) {
+          console.log('🔄 Redirigiendo a:', result.redirectUrl);
+          window.location.href = result.redirectUrl;
+        } else {
+          // Si no hay redirectUrl, redirigir manualmente
+          window.location.href = API_BASE; // Esto ya detecta si es local o render
+        }
+        return;
+      }
+    } catch (error) {
+      console.log('⚠️ Error con /api/logout:', error);
+      
+      // Si falla, intentar con logout estándar
+      try {
+        await fetch(`${API_BASE}/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (error2) {
+        console.log('⚠️ También falló logout estándar:', error2);
+      }
+    }
+    
+    // Si todo falla, limpiar y redirigir manualmente
+    setUsuario(null);
+    setUserRole(0);
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    window.location.href = API_BASE; // Esto ya detecta si es local o render
+  }
+};
+
+  return (
     <CartProvider>
       <FavoritesProvider>
         <Router>
@@ -933,15 +927,24 @@ const MarlyCollectionsSection = () => {
                 <Route path="/" element={
                   <>
                     {/* Sección NEW COLLECTION */}
-                    <NewCollectionSection />
+                    <NewCollectionSection userRole={userRole} />
 
-                    {<MostLovedSection/>}
+                    {/* Sección MOST LOVED */}
+                    <MostLovedSection userRole={userRole} />
 
                     {/* Sección MARLY COLLECTIONS */}
-                    <MarlyCollectionsSection />
+                    <MarlyCollectionsSection 
+                      userRole={userRole}
+                      marlyCollectionsData={marlyCollectionsData}
+                      handleMarlyCollectionImageChange={handleMarlyCollectionImageChange}
+                    />
 
                     {/* Sección MEET THE MAKER */}
-                    <MeetTheMakerSection />
+                    <MeetTheMakerSection 
+                      userRole={userRole}
+                      meetTheMakerData={meetTheMakerData}
+                      handleMeetTheMakerImageChange={handleMeetTheMakerImageChange}
+                    />
 
                     {/* Quick Actions Section */}
                     <section className="quick-actions">
@@ -1020,7 +1023,6 @@ const MarlyCollectionsSection = () => {
                 } />
 
                 {/* Resto de tus rutas... */}
-                
                 <Route path="/anillos" element={<Anillos />} />
                 <Route path="/aretes" element={<Aretes />} />
                 <Route path="/brazaletes" element={<Brazaletes />} />
@@ -1050,9 +1052,6 @@ const MarlyCollectionsSection = () => {
 
             {/* Footer */}
             <AppFooter />
-
-            {/* Overlay para menú móvil */}
-            {isMenuOpen && <div className="menu-overlay" onClick={() => setIsMenuOpen(false)}></div>}
 
             {/* Paneles de Carrito y Favoritos */}
             <CartPanel 

@@ -1,4 +1,4 @@
-package com.example.Proyecto_HD.controller;
+/*package com.example.Proyecto_HD.controller;
 
 import com.example.Proyecto_HD.model.Usuario;
 import com.example.Proyecto_HD.service.CustomUserDetailsService;
@@ -57,3 +57,4 @@ public class UserApiController {
             .body(Map.of("error", "Error de autenticación", "message", "Tipo de principal inesperado"));
     }
 }
+*/ //

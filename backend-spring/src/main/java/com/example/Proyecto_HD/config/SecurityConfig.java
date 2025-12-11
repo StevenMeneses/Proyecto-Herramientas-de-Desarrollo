@@ -10,7 +10,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.HeaderWriterLogoutHandler;
+import org.springframework.security.web.header.writers.ClearSiteDataHeaderWriter;
 import org.springframework.web.cors.CorsConfigurationSource;
+
+import static org.springframework.security.web.header.writers.ClearSiteDataHeaderWriter.Directive.*;
 
 @Configuration
 @EnableWebSecurity
@@ -48,21 +52,21 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Permitir acceso público a estas rutas
                 .requestMatchers("/login", "/registro/**", "/css/**", "/js/**", "/images/**", "/static/**").permitAll()
-                // Permitir acceso a React app (si está servido desde Spring Boot)
+                // Permitir acceso a React app (si está servida desde Spring Boot)
                 .requestMatchers("/", "/index.html", "/manifest.json", "/robots.txt").permitAll()
                 .requestMatchers("/static/**", "/asset-manifest.json").permitAll()
                 // Permitir acceso público a archivos de prueba
                 .requestMatchers("/test-auth.html").permitAll()
-                // Permitir acceso público a endpoints de verificación y auth (incluyendo simple-login)
-                .requestMatchers("/api/auth/**", "/api/test/**").permitAll()
-                // Solo estas rutas específicas requieren autenticación por ahora
+                // Permitir acceso público a endpoints de verificación y auth
+                .requestMatchers("/api/auth/**", "/api/test/**", "/api/logout").permitAll()
+                // Solo estas rutas específicas requieren autenticación
                 .requestMatchers("/api/usuario/datos", "/api/auth/check").authenticated()
                 // Rutas específicas por rol
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/vendedor/**").hasRole("VENDEDOR")
                 .requestMatchers("/cliente/**").hasRole("CLIENTE")
                 .requestMatchers("/dashboard", "/perfil").authenticated()
-                // Para debug - permitir todo lo demás temporalmente
+                // Permitir todo lo demás temporalmente para debug
                 .anyRequest().permitAll()
             )
             .formLogin(form -> form
@@ -87,17 +91,39 @@ public class SecurityConfig {
                     }
                 })
             )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            )
+           .logout(logout -> logout
+    .logoutUrl("/logout")
+    .logoutSuccessHandler((request, response, authentication) -> {
+        // Determinar URL base según entorno
+        String host = request.getServerName();
+        String baseUrl;
+        
+        if (host.contains("render.com") || host.contains("proyecto-herramientas-de-desarrollo-3")) {
+            baseUrl = "https://proyecto-herramientas-de-desarrollo-3.onrender.com";
+        } else {
+            baseUrl = "http://localhost:8080";
+        }
+        
+        // Para peticiones de API (React/AJAX), devolver JSON
+        if (request.getRequestURI().startsWith("/api/")) {
+            response.setContentType("application/json");
+            response.setStatus(200);
+            response.getWriter().write("{\"success\": true, \"message\": \"Sesión cerrada\", \"redirectUrl\": \"" + baseUrl + "\"}");
+        } else {
+            // Para peticiones normales (Thymeleaf/navegador), redirigir al inicio
+            response.sendRedirect(baseUrl);
+        }
+    })
+    .invalidateHttpSession(true)
+    .deleteCookies("JSESSIONID")
+    .addLogoutHandler(new HeaderWriterLogoutHandler(
+        new ClearSiteDataHeaderWriter(COOKIES, CACHE, STORAGE)
+    ))
+    .permitAll()
+)
             .csrf(csrf -> csrf
                 // Ignorar CSRF para endpoints que reciben peticiones cross-origin (React app)
-                // Nota: para mayor seguridad preferir enviar y validar token CSRF desde el cliente.
-                .ignoringRequestMatchers("/api/**", "/registro/**", "/login")
+                .ignoringRequestMatchers("/api/**", "/registro/**", "/login", "/logout")
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.ALWAYS)

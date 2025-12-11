@@ -226,15 +226,29 @@
                 formData.append('redirect', 'react');
                 
                 // Agregar headers que React enviaría
-                const response = await fetch('http://localhost:8080/login', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'include',
-                    headers: {
-                        'Origin': 'http://localhost:3000' // Simular origen React
-                    },
-                    redirect: 'manual'
-                });
+              // Detectar si estamos en localhost o en producción (Render)
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// Configurar URLs dinámicas
+const backendUrl = isLocalhost 
+    ? 'http://localhost:8080' 
+    : 'https://proyecto-herramientas-de-desarrollo-3.onrender.com';
+
+const frontendUrl = isLocalhost 
+    ? 'http://localhost:3000' 
+    : 'https://proyecto-herramientas-de-desarrollo.onrender.com';
+
+// Realizar la petición de login con las URLs correctas
+const response = await fetch(`${backendUrl}/login`, {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+    headers: {
+        'Origin': frontendUrl // Usar la URL dinámica del frontend
+    },
+    redirect: 'manual'
+});
                 
                 log({
                     message: 'Login CORS desde React simulado',
@@ -254,14 +268,28 @@
             try {
                 log('🔄 Simulando API call desde React...', 'info');
                 
-                const response = await fetch('http://localhost:8080/api/usuario/datos', {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        'Origin': 'http://localhost:3000',
-                        'Content-Type': 'application/json'
-                    }
-                });
+               // Detectar si estamos en localhost o en producción (Render)
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1';
+
+// Configurar URLs dinámicas
+const backendUrl = isLocalhost 
+    ? 'http://localhost:8080' 
+    : 'https://proyecto-herramientas-de-desarrollo-3.onrender.com';
+
+const frontendUrl = isLocalhost 
+    ? 'http://localhost:3000' 
+    : 'https://proyecto-herramientas-de-desarrollo.onrender.com';
+
+// Realizar la petición con las URLs dinámicas
+const response = await fetch(`${backendUrl}/api/usuario/datos`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+        'Origin': frontendUrl,
+        'Content-Type': 'application/json'
+    }
+});
                 
                 if (response.headers.get('content-type')?.includes('application/json')) {
                     const data = await response.json();
