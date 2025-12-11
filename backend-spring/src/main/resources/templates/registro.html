@@ -45,7 +45,7 @@
         
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             background-color: var(--light-color);
             border-radius: 15px;
             overflow: hidden;
@@ -54,12 +54,35 @@
         
         .register-form-container {
             padding: 40px;
-            max-height: 80vh;
-            overflow-y: auto;
         }
         
         .register-form {
             display: block;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .form-header p {
+            color: #777;
+        }
+        
+        .client-badge {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 5px;
+            font-weight: 600;
         }
         
         .form-group {
@@ -86,7 +109,7 @@
             color: var(--primary-color);
         }
         
-        .input-with-icon input, .input-with-icon select {
+        .input-with-icon input {
             width: 100%;
             padding: 12px 15px 12px 45px;
             border: 1px solid #ddd;
@@ -96,16 +119,7 @@
             background-color: white;
         }
         
-        .input-with-icon select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 12px center;
-            background-repeat: no-repeat;
-            background-size: 16px;
-        }
-        
-        .input-with-icon input:focus, .input-with-icon select:focus {
+        .input-with-icon input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(212, 167, 106, 0.2);
@@ -121,7 +135,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 10px;
+            margin-top: 20px;
             background-color: var(--primary-color);
         }
         
@@ -137,7 +151,7 @@
         .message {
             padding: 12px;
             border-radius: 8px;
-            margin-top: 20px;
+            margin-bottom: 20px;
             text-align: center;
             font-size: 14px;
         }
@@ -431,7 +445,7 @@
         
         @media (max-width: 768px) {
             .container {
-                max-width: 500px;
+                max-width: 100%;
                 margin: 20px;
             }
             
@@ -533,23 +547,15 @@
                     <span th:text="${success}"></span>
                 </div>
                 
-                <!-- Formulario único de registro -->
+                <!-- Formulario de registro como CLIENTE (rol 3) -->
                 <form id="registerForm" class="register-form" th:action="@{/registro/cliente}" method="post">
-                    <h2>Registro de Usuario</h2>
-                    <p style="color: #777; margin-bottom: 20px;">Completa tus datos para crear tu cuenta</p>
-                    
-                    <!-- Selección de tipo de cuenta -->
-                    <div class="form-group">
-                        <label for="userType">Tipo de Cuenta</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-user-tag"></i>
-                            <select id="userType" name="userType" required onchange="updateFormAction()">
-                                <option value="">Selecciona el tipo de cuenta</option>
-                                <option value="cliente">Cliente</option>
-                                <option value="vendedor">Vendedor</option>
-                            </select>
-                        </div>
+                    <div class="form-header">
+                        <h2>Registro de Cliente</h2>
+                        <p>Completa tus datos para crear tu cuenta</p>
+                        <div class="client-badge">Bienvenido</div>
                     </div>
+                    
+                    <input type="hidden" name="idRol" value="3">
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -639,8 +645,8 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn" id="submitBtn">
-                        <i class="fas fa-user-plus"></i> <span id="btnText">Registrarse</span>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-user-plus"></i> Registrarse como Cliente
                     </button>
                     
                     <div class="login-link">
@@ -721,26 +727,7 @@
             }
         }
         
-        // Actualizar acción del formulario y texto del botón según el tipo de usuario
-        function updateFormAction() {
-            const form = document.getElementById('registerForm');
-            const userType = document.getElementById('userType').value;
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = document.getElementById('btnText');
-            
-            if (userType === 'cliente') {
-                form.action = '/registro/cliente';
-                btnText.textContent = 'Registrarse como Cliente';
-            } else if (userType === 'vendedor') {
-                form.action = '/registro/vendedor';
-                btnText.textContent = 'Registrarse como Vendedor';
-            } else {
-                form.action = '/registro/cliente';
-                btnText.textContent = 'Registrarse';
-            }
-        }
-        
-        // Validación en tiempo real simplificada
+        // Validación en tiempo real
         document.addEventListener('DOMContentLoaded', function() {
             // Validar email único
             document.getElementById('email').addEventListener('blur', function() {
@@ -870,15 +857,6 @@
 
         // Validación de formulario al enviar
         document.getElementById('registerForm').addEventListener('submit', function(e) {
-            let isValid = true;
-            const userType = document.getElementById('userType').value;
-            
-            if (!userType) {
-                e.preventDefault();
-                alert('Por favor, selecciona el tipo de cuenta.');
-                return false;
-            }
-            
             // Validar correos coincidentes
             const email = document.getElementById('email').value;
             const confirmEmail = document.getElementById('correo').value;
@@ -886,7 +864,7 @@
             if (email !== confirmEmail) {
                 e.preventDefault();
                 alert('Los correos electrónicos no coinciden. Por favor, verifica.');
-                isValid = false;
+                return false;
             }
 
             // Validar contraseñas coincidentes
@@ -896,14 +874,14 @@
             if (password !== confirmPassword) {
                 e.preventDefault();
                 alert('Las contraseñas no coinciden. Por favor, verifica.');
-                isValid = false;
+                return false;
             }
 
             // Validar longitud mínima de contraseña
             if (password.length < 6) {
                 e.preventDefault();
                 alert('La contraseña debe tener al menos 6 caracteres.');
-                isValid = false;
+                return false;
             }
 
             // Validar formato de email
@@ -911,7 +889,7 @@
             if (!emailRegex.test(email)) {
                 e.preventDefault();
                 alert('Por favor, ingresa un correo electrónico válido.');
-                isValid = false;
+                return false;
             }
             
             // Validar DNI
@@ -920,10 +898,10 @@
             if (!dniRegex.test(dni)) {
                 e.preventDefault();
                 alert('El DNI debe tener 8 dígitos numéricos.');
-                isValid = false;
+                return false;
             }
 
-            return isValid;
+            return true;
         });
     </script>
 </body>
