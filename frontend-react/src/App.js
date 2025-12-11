@@ -847,43 +847,58 @@ const handleLogout = async (e) => {
         const result = await response.json();
         console.log('✅ Logout exitoso:', result);
         
-        // 1. Limpiar frontend
+        // ✅ NUEVA FORMA: Solo borrar datos del usuario
+        // NO USAR localStorage.clear() - mantener TODO lo demás
+        
+        // 1. Lista de claves a BORRAR (solo datos de sesión)
+        const keysToRemove = [
+          'userRole',
+          'usuario',
+          'authToken',
+          'token',
+          // Agrega aquí otras claves específicas de usuario/sesión
+        ];
+        
+        // 2. Borrar solo esas claves
+        keysToRemove.forEach(key => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        });
+        
+        // 3. Limpiar estado de React
         setUsuario(null);
         setUserRole(0);
-        sessionStorage.clear();
-        localStorage.clear();
         
-        // 2. Redirigir a la URL que indica el backend
+        console.log('✅ Solo datos de sesión eliminados. Todo lo demás (imágenes, config) se mantiene.');
+        console.log('📋 Claves restantes en localStorage:', Object.keys(localStorage));
+        
+        // 4. Redirigir según backend
         if (result.redirectUrl) {
           console.log('🔄 Redirigiendo a:', result.redirectUrl);
           window.location.href = result.redirectUrl;
         } else {
-          // Si no hay redirectUrl, redirigir manualmente
-          window.location.href = API_BASE; // Esto ya detecta si es local o render
+          // Recarga suave sin perder estado
+          window.location.href = window.location.origin;
         }
         return;
       }
     } catch (error) {
       console.log('⚠️ Error con /api/logout:', error);
-      
-      // Si falla, intentar con logout estándar
-      try {
-        await fetch(`${API_BASE}/logout`, {
-          method: 'POST',
-          credentials: 'include'
-        });
-      } catch (error2) {
-        console.log('⚠️ También falló logout estándar:', error2);
-      }
     }
     
-    // Si todo falla, limpiar y redirigir manualmente
+    // Fallback: Si todo falla, igual mantener todo
+    console.log('⚠️ Usando fallback de logout - manteniendo todo');
+    
+    // Solo borrar lo mínimo
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('usuario');
+    sessionStorage.clear(); // sessionStorage sí se puede limpiar
+    
     setUsuario(null);
     setUserRole(0);
-    sessionStorage.clear();
-    localStorage.clear();
     
-    window.location.href = API_BASE; // Esto ya detecta si es local o render
+    // Recargar manteniendo estado
+    window.location.href = window.location.origin;
   }
 };
 
